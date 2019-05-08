@@ -2,7 +2,7 @@
 
 var fs = require('fs'),
     tty = require('tty'),
-    statik = require('./../lib/node-static');
+    statik = require('./../dist/node-static');
 
     var argv = require('optimist')
         .usage([

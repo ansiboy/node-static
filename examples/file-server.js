@@ -1,10 +1,9 @@
-var static = require('../lib/node-static');
-
+const static = require('../dist/node-static');
 //
 // Create a node-static server to serve the current directory
 //
-var file = new static.Server('.', { cache: 7200, headers: {'X-Hello':'World!'} });
-
+let file = new static.Server('.', { cache: 7200, headers: {'X-Hello':'World!'} });
+let port = 8185
 require('http').createServer(function (request, response) {
     file.serve(request, response, function (err, res) {
         if (err) { // An error as occured
@@ -15,6 +14,6 @@ require('http').createServer(function (request, response) {
             console.log("> " + request.url + " - " + res.message);
         }
     });
-}).listen(8080);
+}).listen(8185);
 
-console.log("> node-static is listening on http://127.0.0.1:8080");
+console.log(`> node-static is listening on http://127.0.0.1:${port}`);
