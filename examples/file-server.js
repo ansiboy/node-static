@@ -1,8 +1,12 @@
 const static = require('../dist/node-static');
+const path = require('path')
 //
 // Create a node-static server to serve the current directory
 //
-let file = new static.Server('.', { cache: 7200, headers: {'X-Hello':'World!'} });
+let file = new static.Server('.', {
+    cache: 7200, headers: { 'X-Hello': 'World!' },
+    externalPaths:['../node_modules']
+});
 let port = 8185
 require('http').createServer(function (request, response) {
     file.serve(request, response, function (err, res) {
@@ -15,5 +19,9 @@ require('http').createServer(function (request, response) {
         }
     });
 }).listen(8185);
+
+file.resolve = function (pathname) {
+    return path.resolve(path.join(this.root, pathname));
+}
 
 console.log(`> node-static is listening on http://127.0.0.1:${port}`);

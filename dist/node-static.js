@@ -16,8 +16,9 @@ class Server {
             root = null;
         }
         // resolve() doesn't normalize (to lowercase) drive letters on Windows
-        this.root = path.normalize(path.resolve(root || '.'));
         this.options = options || {};
+        this.root = path.normalize(path.resolve(root || '.'));
+        this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)));
         this.cache = 3600;
         this.defaultHeaders = {};
         this.options.headers = this.options.headers || {};
@@ -128,9 +129,16 @@ class Server {
     servePath(pathname, status, headers, req, res, finish) {
         var that = this, promise = new (events.EventEmitter);
         pathname = this.resolve(pathname);
+        let isExternalFile = false;
+        for (let i = 0; i < this.externalPaths.length; i++) {
+            if (pathname.indexOf(this.externalPaths[i]) == 0) {
+                isExternalFile = true;
+                break;
+            }
+        }
         // Make sure we're not trying to access a
         // file outside of the root.
-        if (pathname.indexOf(that.root) === 0) {
+        if (pathname.indexOf(that.root) === 0 || isExternalFile) {
             fs.stat(pathname, function (e, stat) {
                 if (e) {
                     finish(404, {});
@@ -355,3 +363,4 @@ class Server {
     }
 }
 exports.Server = Server;
+//# sourceMappingURL=node-static.js.map

@@ -32,3 +32,4 @@ function mstat(dir, files, callback) {
 }
 exports.mstat = mstat;
 ;
+//# sourceMappingURL=util.js.map

@@ -12,6 +12,7 @@ interface ServerOptions {
     cache?: number
     serverInfo?: string
     gzip?: boolean | RegExp
+    externalPaths?: string[]
 }
 
 type HttpHeaders = { [key: string]: string }
@@ -21,6 +22,7 @@ var version = [0, 7, 9];
 
 export class Server {
     private root: string
+    private externalPaths: string[]
     private options: ServerOptions
     private cache: number | boolean
     private defaultHeaders: { [key: string]: string }
@@ -30,10 +32,11 @@ export class Server {
         if (root && (typeof (root) === 'object')) { options = root; root = null }
 
         // resolve() doesn't normalize (to lowercase) drive letters on Windows
-        this.root = path.normalize(path.resolve(root || '.'));
         this.options = options || {};
-        this.cache = 3600;
+        this.root = path.normalize(path.resolve(root || '.'));
+        this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
 
+        this.cache = 3600;
         this.defaultHeaders = {};
         this.options.headers = this.options.headers || {};
 
@@ -146,15 +149,22 @@ export class Server {
         }
     }
 
-    servePath(pathname, status, headers, req, res, finish) {
+    private servePath(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse, finish: Function) {
         var that = this,
             promise = new (events.EventEmitter);
 
         pathname = this.resolve(pathname);
+        let isExternalFile = false
+        for (let i = 0; i < this.externalPaths.length; i++) {
+            if (pathname.indexOf(this.externalPaths[i]) == 0) {
+                isExternalFile = true
+                break
+            }
+        }
 
         // Make sure we're not trying to access a
         // file outside of the root.
-        if (pathname.indexOf(that.root) === 0) {
+        if (pathname.indexOf(that.root) === 0 || isExternalFile) {
             fs.stat(pathname, function (e, stat) {
                 if (e) {
                     finish(404, {});
@@ -173,7 +183,9 @@ export class Server {
         return promise;
     }
 
-    respond(pathname, status, _headers, files, stat, req, res, finish) {
+    private respond(pathname: string, status: number, _headers: HttpHeaders, files: string[], stat: fs.Stats,
+        req: http.IncomingMessage, res: http.ServerResponse, finish: Function) {
+
         var contentType = _headers['Content-Type'] ||
             (mime as any).lookup(files[0]) ||
             'application/octet-stream';
@@ -185,7 +197,7 @@ export class Server {
         }
     }
 
-    resolve(pathname: string) {
+    protected resolve(pathname: string) {
         return path.resolve(path.join(this.root, pathname));
     }
 
@@ -194,7 +206,7 @@ export class Server {
             promise = new (events.EventEmitter),
             pathname;
 
-        var finish = function (status, headers) {
+        var finish = function (status: number, headers: HttpHeaders) {
             that.finish(status, headers, req, res, promise, callback);
         };
 
@@ -228,7 +240,7 @@ export class Server {
         return false;
     }
 
-    respondGzip(pathname: string, status: number, contentType: string, _headers: Headers, files, stat, req, res, finish) {
+    respondGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files, stat, req, res, finish) {
         var that = this;
         if (files.length == 1 && this.gzipOk(req, contentType)) {
             var gzFile = files[0] + ".gz";
@@ -248,7 +260,9 @@ export class Server {
         }
     }
 
-    respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish) {
+    respondNoGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: string[],
+        stat, req: http.IncomingMessage, res: http.ServerResponse, finish) {
+
         var mtime = Date.parse(stat.mtime),
             key = pathname || files[0],
             headers = {},
