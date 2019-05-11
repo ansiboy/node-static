@@ -103,7 +103,7 @@ export class Server {
         var that = this;
         var promise = new (events.EventEmitter);
 
-        pathname = this.resolve(pathname);
+        pathname = this.resolve(pathname, req);
 
         fs.stat(pathname, function (e, stat) {
             if (e) {
@@ -153,7 +153,7 @@ export class Server {
         var that = this,
             promise = new (events.EventEmitter);
 
-        pathname = this.resolve(pathname);
+        pathname = this.resolve(pathname, req);
         let isExternalFile = false
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (pathname.indexOf(this.externalPaths[i]) == 0) {
@@ -197,7 +197,7 @@ export class Server {
         }
     }
 
-    protected resolve(pathname: string) {
+    protected resolve(pathname: string, req: http.IncomingMessage) {
         return path.resolve(path.join(this.root, pathname));
     }
 
