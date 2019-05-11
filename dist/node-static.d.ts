@@ -25,7 +25,7 @@ export declare class Server {
     finish(status: any, headers: any, req: any, res: any, promise: any, callback?: Function): void;
     private servePath;
     private respond;
-    protected resolve(pathname: string): string;
+    protected resolve(pathname: string, req: http.IncomingMessage): string;
     serve(req: http.IncomingMessage, res: http.ServerResponse, callback?: Function): void | events.EventEmitter;
     gzipOk(req: any, contentType: any): boolean;
     respondGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: any, stat: any, req: any, res: any, finish: any): void;
