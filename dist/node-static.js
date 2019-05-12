@@ -83,7 +83,7 @@ class Server {
     serveFile(pathname, status, headers, req, res) {
         var that = this;
         var promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname);
+        pathname = this.resolve(pathname, req);
         fs.stat(pathname, function (e, stat) {
             if (e) {
                 return promise.emit('error', e);
@@ -128,7 +128,7 @@ class Server {
     }
     servePath(pathname, status, headers, req, res, finish) {
         var that = this, promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname);
+        pathname = this.resolve(pathname, req);
         let isExternalFile = false;
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (pathname.indexOf(this.externalPaths[i]) == 0) {
@@ -171,7 +171,7 @@ class Server {
             this.respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
         }
     }
-    resolve(pathname) {
+    resolve(pathname, req) {
         return path.resolve(path.join(this.root, pathname));
     }
     serve(req, res, callback) {
