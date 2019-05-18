@@ -34,7 +34,15 @@ export class Server {
         // resolve() doesn't normalize (to lowercase) drive letters on Windows
         this.options = options || {};
         this.root = path.normalize(path.resolve(root || '.'));
-        this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
+        // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
+        this.externalPaths = options.externalPaths || []
+        for (let i = 0; i < this.externalPaths.length; i++) {
+            if (!path.isAbsolute(this.externalPaths[i])) {
+                this.externalPaths[i] = path.join(this.root, this.externalPaths[i])
+            }
+
+            this.externalPaths[i] = path.normalize(this.externalPaths[i])
+        }
 
         this.cache = 3600;
         this.defaultHeaders = {};
@@ -186,8 +194,7 @@ export class Server {
     private respond(pathname: string, status: number, _headers: HttpHeaders, files: string[], stat: fs.Stats,
         req: http.IncomingMessage, res: http.ServerResponse, finish: Function) {
 
-        var contentType = _headers['Content-Type'] ||
-            (mime as any).lookup(files[0]) ||
+        var contentType = _headers['Content-Type'] || mime.getType(files[0]) ||
             'application/octet-stream';
 
         if (this.options.gzip) {
@@ -197,7 +204,7 @@ export class Server {
         }
     }
 
-    protected resolve(pathname: string, req: http.IncomingMessage) {
+    resolve(pathname: string, req: http.IncomingMessage) {
         return path.resolve(path.join(this.root, pathname));
     }
 
