@@ -1,6 +1,6 @@
 {
   "name": "maishu-node-static",
-  "version": "1.0.2",
+  "version": "1.2.2",
   "description": "simple, compliant file streaming module for node",
   "url": "http://github.com/ansiboy/node-static",
   "author": "maishu <ansiboy@163.com>",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@types/mime": "^2.0.1",
     "@types/node": "^12.0.0",
-    "mime": "^2.4.2"
+    "mime": "^2.4.2",
+    "mime-types": "^2.1.24"
   }
 }

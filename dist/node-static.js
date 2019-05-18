@@ -18,7 +18,14 @@ class Server {
         // resolve() doesn't normalize (to lowercase) drive letters on Windows
         this.options = options || {};
         this.root = path.normalize(path.resolve(root || '.'));
-        this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)));
+        // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
+        this.externalPaths = options.externalPaths || [];
+        for (let i = 0; i < this.externalPaths.length; i++) {
+            if (!path.isAbsolute(this.externalPaths[i])) {
+                this.externalPaths[i] = path.join(this.root, this.externalPaths[i]);
+            }
+            this.externalPaths[i] = path.normalize(this.externalPaths[i]);
+        }
         this.cache = 3600;
         this.defaultHeaders = {};
         this.options.headers = this.options.headers || {};
@@ -161,8 +168,7 @@ class Server {
         return promise;
     }
     respond(pathname, status, _headers, files, stat, req, res, finish) {
-        var contentType = _headers['Content-Type'] ||
-            mime.lookup(files[0]) ||
+        var contentType = _headers['Content-Type'] || mime.getType(files[0]) ||
             'application/octet-stream';
         if (this.options.gzip) {
             this.respondGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
