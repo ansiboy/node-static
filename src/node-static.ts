@@ -175,6 +175,7 @@ export class Server {
         if (pathname.indexOf(that.root) === 0 || isExternalFile) {
             fs.stat(pathname, function (e, stat) {
                 if (e) {
+                    console.log(`File ${pathname} is not exists.`)
                     finish(404, {});
                 } else if (stat.isFile()) {      // Stream a single file.
                     that.respond(null, status, headers, [pathname], stat, req, res, finish);
