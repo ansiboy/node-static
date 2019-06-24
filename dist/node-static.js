@@ -7,6 +7,7 @@ const http = require("http");
 const events = require("events");
 const mime = require("mime");
 const util = require("./node-static/util");
+const errors_1 = require("./errors");
 // Current version
 var version = [0, 7, 9];
 class Server {
@@ -15,10 +16,8 @@ class Server {
             options = root;
             root = null;
         }
-        // resolve() doesn't normalize (to lowercase) drive letters on Windows
         this.options = options || {};
         this.root = path.normalize(path.resolve(root || '.'));
-        // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
         this.externalPaths = options.externalPaths || [];
         this.virtualPaths = {};
         if (options.virtualPaths) {
@@ -27,7 +26,10 @@ class Server {
                 if (!virtualPath.startsWith('/')) {
                     virtualPath = '/' + virtualPath;
                 }
-                this.virtualPaths[virtualPath] = path.resolve(options.virtualPaths[key]);
+                let physicalPath = options.virtualPaths[key];
+                if (!path.isAbsolute(physicalPath))
+                    throw errors_1.errors.notPhysicalPath(virtualPath, physicalPath);
+                this.virtualPaths[virtualPath] = options.virtualPaths[key];
             }
         }
         if (options.virtualPaths) {
