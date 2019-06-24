@@ -20,6 +20,22 @@ class Server {
         this.root = path.normalize(path.resolve(root || '.'));
         // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
         this.externalPaths = options.externalPaths || [];
+        this.virtualPaths = {};
+        if (options.virtualPaths) {
+            for (let key in options.virtualPaths) {
+                let virtualPath = key;
+                if (!virtualPath.startsWith('/')) {
+                    virtualPath = '/' + virtualPath;
+                }
+                this.virtualPaths[virtualPath] = path.resolve(options.virtualPaths[key]);
+            }
+        }
+        if (options.virtualPaths) {
+            for (let key in options.virtualPaths) {
+                let physicalPath = options.virtualPaths[key];
+                this.externalPaths.push(physicalPath);
+            }
+        }
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (!path.isAbsolute(this.externalPaths[i])) {
                 this.externalPaths[i] = path.join(this.root, this.externalPaths[i]);
@@ -179,7 +195,13 @@ class Server {
         }
     }
     resolve(pathname, req) {
-        return path.resolve(path.join(this.root, pathname));
+        for (let key in this.virtualPaths) {
+            if (pathname.startsWith(key)) {
+                return path.join(this.virtualPaths[key], pathname.substring(key.length));
+            }
+        }
+        return path.join(this.root, pathname);
+        //return path.resolve(path.join(this.root, pathname));
     }
     serve(req, res, callback) {
         var that = this, promise = new (events.EventEmitter), pathname;

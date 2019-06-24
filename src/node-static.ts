@@ -12,7 +12,8 @@ interface ServerOptions {
     cache?: number
     serverInfo?: string
     gzip?: boolean | RegExp
-    externalPaths?: string[]
+    externalPaths?: string[],
+    virtualPaths?: { [virtualPath: string]: string }
 }
 
 type HttpHeaders = { [key: string]: string }
@@ -27,6 +28,7 @@ export class Server {
     private cache: number | boolean
     private defaultHeaders: { [key: string]: string }
     private serverInfo: string
+    private virtualPaths: { [virtualPath: string]: string; };
 
     constructor(root: string, options?: ServerOptions) {
         if (root && (typeof (root) === 'object')) { options = root; root = null }
@@ -36,6 +38,24 @@ export class Server {
         this.root = path.normalize(path.resolve(root || '.'));
         // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
         this.externalPaths = options.externalPaths || []
+        this.virtualPaths = {}
+        if (options.virtualPaths) {
+            for (let key in options.virtualPaths) {
+                let virtualPath = key
+                if (!virtualPath.startsWith('/')) {
+                    virtualPath = '/' + virtualPath
+                }
+                this.virtualPaths[virtualPath] = path.resolve(options.virtualPaths[key])
+            }
+        }
+
+        if (options.virtualPaths) {
+            for (let key in options.virtualPaths) {
+                let physicalPath = options.virtualPaths[key]
+                this.externalPaths.push(physicalPath)
+            }
+        }
+
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (!path.isAbsolute(this.externalPaths[i])) {
                 this.externalPaths[i] = path.join(this.root, this.externalPaths[i])
@@ -43,6 +63,8 @@ export class Server {
 
             this.externalPaths[i] = path.normalize(this.externalPaths[i])
         }
+
+
 
         this.cache = 3600;
         this.defaultHeaders = {};
@@ -206,7 +228,13 @@ export class Server {
     }
 
     resolve(pathname: string, req: http.IncomingMessage) {
-        return path.resolve(path.join(this.root, pathname));
+        for (let key in this.virtualPaths) {
+            if (pathname.startsWith(key)) {
+                return path.join(this.virtualPaths[key], pathname.substring(key.length))
+            }
+        }
+        return path.join(this.root, pathname)
+        //return path.resolve(path.join(this.root, pathname));
     }
 
     serve(req: http.IncomingMessage, res: http.ServerResponse, callback?: Function) {

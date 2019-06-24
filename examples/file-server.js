@@ -5,7 +5,10 @@ const path = require('path')
 //
 let file = new static.Server('.', {
     cache: 7200, headers: { 'X-Hello': 'World!' },
-    externalPaths:['../node_modules']
+    externalPaths: ['../node_modules'],
+    virtualPaths: {
+        'node_modules': path.join(__dirname, '../node_modules')
+    }
 });
 let port = 8185
 require('http').createServer(function (request, response) {
@@ -20,8 +23,8 @@ require('http').createServer(function (request, response) {
     });
 }).listen(8185);
 
-file.resolve = function (pathname) {
-    return path.resolve(path.join(this.root, pathname));
-}
+// file.resolve = function (pathname) {
+//     return path.resolve(path.join(this.root, pathname));
+// }
 
 console.log(`> node-static is listening on http://127.0.0.1:${port}`);

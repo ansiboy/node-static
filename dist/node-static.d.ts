@@ -8,6 +8,9 @@ interface ServerOptions {
     serverInfo?: string;
     gzip?: boolean | RegExp;
     externalPaths?: string[];
+    virtualPaths?: {
+        [virtualPath: string]: string;
+    };
 }
 declare type HttpHeaders = {
     [key: string]: string;
@@ -19,6 +22,7 @@ export declare class Server {
     private cache;
     private defaultHeaders;
     private serverInfo;
+    private virtualPaths;
     constructor(root: string, options?: ServerOptions);
     serveDir(pathname: any, req: http.IncomingMessage, res: http.ServerResponse, finish: any): void;
     serveFile(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse): events.EventEmitter;
