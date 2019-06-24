@@ -5,6 +5,7 @@ import http = require('http')
 import events = require('events')
 import mime = require('mime')
 import * as util from './node-static/util'
+import { errors } from './errors';
 
 interface ServerOptions {
     headers?: HttpHeaders
@@ -33,10 +34,8 @@ export class Server {
     constructor(root: string, options?: ServerOptions) {
         if (root && (typeof (root) === 'object')) { options = root; root = null }
 
-        // resolve() doesn't normalize (to lowercase) drive letters on Windows
         this.options = options || {};
         this.root = path.normalize(path.resolve(root || '.'));
-        // this.externalPaths = (options.externalPaths || []).map(o => path.normalize(path.resolve(o)))
         this.externalPaths = options.externalPaths || []
         this.virtualPaths = {}
         if (options.virtualPaths) {
@@ -45,7 +44,12 @@ export class Server {
                 if (!virtualPath.startsWith('/')) {
                     virtualPath = '/' + virtualPath
                 }
-                this.virtualPaths[virtualPath] = path.resolve(options.virtualPaths[key])
+
+                let physicalPath = options.virtualPaths[key]
+                if (!path.isAbsolute(physicalPath))
+                    throw errors.notPhysicalPath(virtualPath, physicalPath)
+
+                this.virtualPaths[virtualPath] = options.virtualPaths[key]
             }
         }
 
