@@ -7,7 +7,9 @@ let file = new static.Server('.', {
     cache: 7200, headers: { 'X-Hello': 'World!' },
     externalPaths: ['../node_modules'],
     virtualPaths: {
-        'node_modules': path.join(__dirname, '../node_modules')
+        'node_modules': path.join(__dirname, '../node_modules'),
+        'json.js': path.join(__dirname, 'requirejs/json.js'),
+        'mobile/json.js': path.join(__dirname, 'requirejs/json.js'),
     }
 });
 let port = 8185

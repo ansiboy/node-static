@@ -198,7 +198,7 @@ class Server {
     }
     resolve(pathname, req) {
         for (let key in this.virtualPaths) {
-            if (pathname.startsWith(key)) {
+            if (pathname == key) {
                 return path.join(this.virtualPaths[key], pathname.substring(key.length));
             }
         }
