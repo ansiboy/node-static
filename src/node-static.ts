@@ -47,7 +47,7 @@ export class Server {
 
                 let physicalPath = options.virtualPaths[key]
                 if (!path.isAbsolute(physicalPath))
-                    throw errors.notPhysicalPath(virtualPath, physicalPath)
+                    throw errors.vitualPathRequirePhysicalPath(virtualPath, physicalPath)
 
                 this.virtualPaths[virtualPath] = options.virtualPaths[key]
             }

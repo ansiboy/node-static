@@ -28,7 +28,7 @@ class Server {
                 }
                 let physicalPath = options.virtualPaths[key];
                 if (!path.isAbsolute(physicalPath))
-                    throw errors_1.errors.notPhysicalPath(virtualPath, physicalPath);
+                    throw errors_1.errors.vitualPathRequirePhysicalPath(virtualPath, physicalPath);
                 this.virtualPaths[virtualPath] = options.virtualPaths[key];
             }
         }
