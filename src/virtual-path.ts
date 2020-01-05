@@ -12,12 +12,16 @@ export class VirtualDirectory {
 
         if (!physicalPaths) throw errors.argumentNull("physicalPaths");
         if (!Array.isArray(physicalPaths)) throw errors.argumentTypeIncorrect("physicalPaths", "Array");
-        if (physicalPaths.length == 0) throw errors.arrayEmpty("physicalPaths");
+        // if (physicalPaths.length == 0)
+        //     throw errors.arrayEmpty("physicalPaths");
 
         for (let i = 0; i < physicalPaths.length; i++) {
             let physicalPath = physicalPaths[i];
             if (!fs.existsSync(physicalPath))
                 throw errors.physicalPathNotExists(physicalPath);
+
+            if (!fs.statSync(physicalPath).isDirectory())
+                throw errors.pathNotDirectory(physicalPath);
         }
 
         physicalPaths.forEach(physicalPath => {
@@ -35,6 +39,9 @@ export class VirtualDirectory {
 
     addPhysicalPath(physicalPath: string) {
 
+        if (!fs.statSync(physicalPath).isDirectory())
+            throw errors.pathNotDirectory(physicalPath);
+
         this.physicalPaths.push(physicalPath);
         let names = fs.readdirSync(physicalPath);
         names.forEach(name => {
@@ -44,7 +51,7 @@ export class VirtualDirectory {
             }
 
             if (this._childDirectories[name]) {
-                // this._childDirectories[name].physicalPaths.push(childPhysicalPath);
+                console.assert(fs.statSync(childPhysicalPath).isDirectory());
                 this._childDirectories[name].addPhysicalPath(childPhysicalPath);
             }
             else {
@@ -76,13 +83,16 @@ export class VirtualDirectory {
 
     /**
      * 通过路径获取文件夹
-     * @param virtualPath 文件的路径
+     * @param virtualPath 文件夹的虚拟路径
      */
     childDirectory(virtualPath: string): VirtualDirectory {
         if (!virtualPath) throw errors.argumentNull("path");
-        this.checkVirtualPath(virtualPath);
+        VirtualDirectory.checkVirtualPath(virtualPath);
 
         let names = virtualPath.split("/").filter(o => o);
+        if (names.length < 1)
+            return this;
+
         let dir: VirtualDirectory = this;
         for (let i = 0; i < names.length; i++) {
             dir = dir._childDirectories[names[i]];
@@ -93,7 +103,50 @@ export class VirtualDirectory {
         return dir;
     }
 
-    private checkVirtualPath(virtualPath: string) {
+    /**
+     * 通过路径获取文件
+     * @param virtualPath 文件的虚拟路径
+     */
+    childFile(virtualPath: string): string {
+        if (!virtualPath) throw errors.argumentNull("path");
+        VirtualDirectory.checkVirtualPath(virtualPath);
+
+        let names = virtualPath.split("/").filter(o => o);
+        if (names.length < 1)
+            return null;
+
+
+        let dir: VirtualDirectory;
+        let fileName: string;
+        if (names.length == 1) {
+            dir = this;
+            fileName = names[0];
+        }
+        else {
+            fileName = names[names.length - 1];
+            names = names.slice(0, names.length - 1);
+            let dirPath = names.join("/");
+            dir = this.childDirectory(dirPath);
+        }
+
+        if (dir == null)
+            return null;
+
+        if (dir._childFiles[fileName])
+            return dir._childFiles[fileName];
+
+        //===================================================
+        // 从物理文件夹中找出对应的文件，优先从后面的文件夹找
+        for (let i = dir.physicalPaths.length - 1; i >= 0; i--) {
+            let filePhysicalPath = path.join(dir.physicalPaths[i], fileName);
+            if (fs.existsSync(filePhysicalPath))
+                return filePhysicalPath;
+        }
+
+        return null;
+    }
+
+    private static checkVirtualPath(virtualPath: string) {
         console.assert(virtualPath != null);
         if (virtualPath[0] == "/")
             throw errors.virtualPathStartsWithSlash(virtualPath);
@@ -102,10 +155,10 @@ export class VirtualDirectory {
             throw errors.virtualPathEndsWithSlash(virtualPath);
     }
 
-    /** 添加虚拟文件夹 */
+    /** 添加子虚拟文件夹 */
     addvirtualDirectory(virtualPath: string, physicalPath: string, operationExists: "replace" | "merge") {
         if (!virtualPath) throw errors.argumentNull("virtualPath");
-        this.checkVirtualPath(virtualPath);
+        VirtualDirectory.checkVirtualPath(virtualPath);
 
         if (!physicalPath) throw errors.argumentNull("physicalPath");
         if (!operationExists) throw errors.argumentNull("operationExists");
@@ -140,12 +193,13 @@ export class VirtualDirectory {
         parentDir._childDirectories[dirName] = new VirtualDirectory(physicalPath);
     }
 
-    /** 添加虚拟文件夹 */
+    /** 添加子虚拟文件 */
     addvirtualFile(virtualPath: string, physicalPath: string) {
         if (!virtualPath) throw errors.argumentNull("virtualPath");
-        this.checkVirtualPath(virtualPath);
-
         if (!physicalPath) throw errors.argumentNull("physicalPath");
+
+        if (!fs.statSync(physicalPath).isFile())
+            throw errors.pathNotFile(physicalPath);
 
         let names = virtualPath.split("/").filter(o => o);
         let parentDir: VirtualDirectory = this;
@@ -163,5 +217,4 @@ export class VirtualDirectory {
         let fileName = names[names.length - 1];
         this._childFiles[fileName] = physicalPath;
     }
-
 }

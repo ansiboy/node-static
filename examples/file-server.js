@@ -12,7 +12,7 @@ let file = new static.Server('.', {
         'mobile/json.js': path.join(__dirname, 'requirejs/json.js'),
     }
 });
-let port = 8185
+let port = 9185
 require('http').createServer(function (request, response) {
     file.serve(request, response, function (err, res) {
         if (err) { // An error as occured
@@ -23,7 +23,7 @@ require('http').createServer(function (request, response) {
             console.log("> " + request.url + " - " + res.message);
         }
     });
-}).listen(8185);
+}).listen(port);
 
 // file.resolve = function (pathname) {
 //     return path.resolve(path.join(this.root, pathname));

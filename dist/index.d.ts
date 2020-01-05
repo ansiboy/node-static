@@ -1,1 +1,2 @@
-export { Server } from './node-static';
+export { Server, StatusCode } from './node-static';
+export { VirtualDirectory } from "./virtual-path";

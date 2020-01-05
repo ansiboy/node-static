@@ -1,12 +1,11 @@
 /// <reference types="node" />
 import http = require('http');
-import events = require('events');
+import { VirtualDirectory } from './virtual-path';
+import { Readable } from "stream";
 interface ServerOptions {
     headers?: HttpHeaders;
     indexFile?: string;
-    cache?: number;
     serverInfo?: string;
-    gzip?: boolean | RegExp;
     externalPaths?: string[];
     virtualPaths?: {
         [virtualPath: string]: string;
@@ -15,25 +14,29 @@ interface ServerOptions {
 declare type HttpHeaders = {
     [key: string]: string;
 };
+export declare enum StatusCode {
+    NotFound = 404,
+    OK = 200,
+    Redirect = 301,
+    BadRequest = 400,
+    Forbidden = 403
+}
 export declare class Server {
-    private root;
-    private externalPaths;
     private options;
-    private cache;
     private defaultHeaders;
     private serverInfo;
-    private virtualPaths;
-    constructor(root: string, options?: ServerOptions);
+    private rootDir;
+    constructor(root: string | VirtualDirectory, options?: ServerOptions);
+    serve(req: http.IncomingMessage, res: http.ServerResponse): Promise<void>;
     private serveDir;
-    private serveFile;
+    private createReadble;
     private finish;
-    private servePath;
-    private respond;
+    protected servePath(pathname: string): Promise<{
+        statusCode: StatusCode;
+        fileStream: Readable;
+    }>;
     /** 将路径转化为物理路径 */
     private resolve;
-    serve(req: http.IncomingMessage, res: http.ServerResponse, callback?: Function): void | events.EventEmitter;
-    private gzipOk;
-    private respondGzip;
     private respondNoGzip;
     private stream;
     parseByteRange(req: any, stat: any): {

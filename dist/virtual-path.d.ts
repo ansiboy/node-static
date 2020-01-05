@@ -15,12 +15,17 @@ export declare class VirtualDirectory {
     };
     /**
      * 通过路径获取文件夹
-     * @param virtualPath 文件的路径
+     * @param virtualPath 文件夹的虚拟路径
      */
     childDirectory(virtualPath: string): VirtualDirectory;
-    private checkVirtualPath;
-    /** 添加虚拟文件夹 */
+    /**
+     * 通过路径获取文件
+     * @param virtualPath 文件的虚拟路径
+     */
+    childFile(virtualPath: string): string;
+    private static checkVirtualPath;
+    /** 添加子虚拟文件夹 */
     addvirtualDirectory(virtualPath: string, physicalPath: string, operationExists: "replace" | "merge"): void;
-    /** 添加虚拟文件夹 */
+    /** 添加子虚拟文件 */
     addvirtualFile(virtualPath: string, physicalPath: string): void;
 }

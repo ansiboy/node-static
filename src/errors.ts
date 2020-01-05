@@ -55,5 +55,23 @@ export let errors = {
         let name: keyof typeof errors = "physicalPathNotExists";
         error.name = name;
         return error;
+    },
+    filePahtExists(path: string) {
+        let error = new Error(`File path '${path}' is exists.`);
+        let name: keyof typeof errors = "filePahtExists";
+        error.name = name;
+        return error;
+    },
+    pathNotDirectory(path: string) {
+        let error = new Error(`Path '${path}' is not a directory.`);
+        let name: keyof typeof errors = "pathNotDirectory";
+        error.name = name;
+        return error;
+    },
+    pathNotFile(path: string) {
+        let error = new Error(`Path '${path}' is not a file.`);
+        let name: keyof typeof errors = "pathNotFile";
+        error.name = name;
+        return error;
     }
 }

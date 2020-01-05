@@ -1,61 +1,62 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const fs = require("fs");
 const url = require("url");
 const http = require("http");
-const events = require("events");
-const mime = require("mime");
-const util = require("./node-static/util");
 const errors_1 = require("./errors");
+const virtual_path_1 = require("./virtual-path");
+const stream_1 = require("stream");
 // Current version
 var version = [0, 7, 9];
+var StatusCode;
+(function (StatusCode) {
+    StatusCode[StatusCode["NotFound"] = 404] = "NotFound";
+    StatusCode[StatusCode["OK"] = 200] = "OK";
+    StatusCode[StatusCode["Redirect"] = 301] = "Redirect";
+    StatusCode[StatusCode["BadRequest"] = 400] = "BadRequest";
+    StatusCode[StatusCode["Forbidden"] = 403] = "Forbidden";
+})(StatusCode = exports.StatusCode || (exports.StatusCode = {}));
+let errorPages = {
+    NotFound: "Not Found",
+    Forbidden: "Forbidden",
+    BadRequest: "Bad Request"
+};
 class Server {
     constructor(root, options) {
-        if (root && (typeof (root) === 'object')) {
-            options = root;
-            root = null;
-        }
-        this.options = options || {};
-        this.root = path.normalize(path.resolve(root || '.'));
-        this.externalPaths = options.externalPaths || [];
-        this.virtualPaths = {};
+        if (!root)
+            throw errors_1.errors.argumentNull("root");
+        this.options = options = options || {};
+        if (typeof root == "string")
+            this.rootDir = new virtual_path_1.VirtualDirectory(root);
+        else
+            this.rootDir = root;
         if (options.virtualPaths) {
             for (let key in options.virtualPaths) {
                 let virtualPath = key;
-                if (!virtualPath.startsWith('/')) {
-                    virtualPath = '/' + virtualPath;
+                let physicalPath = options.virtualPaths[key];
+                // if (!path.isAbsolute(physicalPath))
+                //     throw errors.vitualPathRequirePhysicalPath(virtualPath, physicalPath)
+                if (fs.statSync(physicalPath).isDirectory()) {
+                    this.rootDir.addvirtualDirectory(virtualPath, physicalPath, "merge");
                 }
-                let physicalPath = options.virtualPaths[key];
-                if (!path.isAbsolute(physicalPath))
-                    throw errors_1.errors.vitualPathRequirePhysicalPath(virtualPath, physicalPath);
-                this.virtualPaths[virtualPath] = options.virtualPaths[key];
+                else {
+                    this.rootDir.addvirtualFile(virtualPath, physicalPath);
+                }
             }
         }
-        if (options.virtualPaths) {
-            for (let key in options.virtualPaths) {
-                let physicalPath = options.virtualPaths[key];
-                this.externalPaths.push(physicalPath);
-            }
-        }
-        for (let i = 0; i < this.externalPaths.length; i++) {
-            if (!path.isAbsolute(this.externalPaths[i])) {
-                this.externalPaths[i] = path.join(this.root, this.externalPaths[i]);
-            }
-            this.externalPaths[i] = path.normalize(this.externalPaths[i]);
-        }
-        this.cache = 3600;
         this.defaultHeaders = {};
         this.options.headers = this.options.headers || {};
         this.options.indexFile = this.options.indexFile || "index.html";
-        if ('cache' in this.options) {
-            if (typeof (this.options.cache) === 'number') {
-                this.cache = this.options.cache;
-            }
-            else if (!this.options.cache) {
-                this.cache = false;
-            }
-        }
         if ('serverInfo' in this.options) {
             this.serverInfo = this.options.serverInfo.toString();
         }
@@ -63,61 +64,45 @@ class Server {
             this.serverInfo = 'node-static/' + version.join('.');
         }
         this.defaultHeaders['server'] = this.serverInfo;
-        if (this.cache !== false) {
-            this.defaultHeaders['cache-control'] = 'max-age=' + this.cache;
-        }
         for (var k in this.defaultHeaders) {
             this.options.headers[k] = this.options.headers[k] ||
                 this.defaultHeaders[k];
         }
     }
-    serveDir(pathname, req, res, finish) {
-        var htmlIndex = path.join(pathname, this.options.indexFile), that = this;
-        fs.stat(htmlIndex, function (e, stat) {
-            if (!e) {
-                var status = 200;
-                var headers = {};
-                var originalPathname = decodeURI(url.parse(req.url).pathname);
-                if (originalPathname.length && originalPathname.charAt(originalPathname.length - 1) !== '/') {
-                    return finish(301, { 'Location': originalPathname + '/' });
-                }
-                else {
-                    that.respond(null, status, headers, [htmlIndex], stat, req, res, finish);
-                }
+    serve(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var pathname;
+            let r;
+            try {
+                pathname = decodeURI(url.parse(req.url).pathname);
             }
-            else {
-                // Stream a directory of files as a single file.
-                fs.readFile(path.join(pathname, 'index.json'), function (e, contents) {
-                    if (e) {
-                        return finish(404, {});
-                    }
-                    var index = JSON.parse(contents.toString());
-                    streamFiles(index.files);
-                });
+            catch (e) {
+                r = { statusCode: StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) };
             }
+            if (pathname)
+                r = yield this.servePath(pathname);
+            //======================================
+            // TODO:headers
+            let headers = {};
+            res.writeHead(r.statusCode, headers);
+            r.fileStream.pipe(res);
         });
-        function streamFiles(files) {
-            util.mstat(pathname, files, function (e, stat) {
-                if (e) {
-                    return finish(404, {});
-                }
-                that.respond(pathname, 200, {}, files, stat, req, res, finish);
-            });
-        }
     }
-    serveFile(pathname, status, headers, req, res) {
-        var that = this;
-        var promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname);
-        fs.stat(pathname, function (e, stat) {
-            if (e) {
-                return promise.emit('error', e);
+    serveDir(dir) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let htmlIndex = dir.childFile(this.options.indexFile); //path.join(pathname, this.options.indexFile),
+            if (!fs.existsSync(htmlIndex)) {
+                return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
             }
-            that.respond(null, status, headers, [pathname], stat, req, res, function (status, headers) {
-                that.finish(status, headers, req, res, promise);
-            });
+            let stream = fs.createReadStream(htmlIndex);
+            return { statusCode: StatusCode.OK, fileStream: stream };
         });
-        return promise;
+    }
+    createReadble(text) {
+        let r = new stream_1.Readable();
+        r.push(Buffer.from(text));
+        r.push(null);
+        return r;
     }
     finish(status, headers, req, res, promise, callback) {
         var result = {
@@ -151,114 +136,36 @@ class Server {
             promise.emit('success', result);
         }
     }
-    servePath(pathname, status, headers, req, res, finish) {
-        var that = this;
-        var promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname);
-        let isExternalFile = false;
-        for (let i = 0; i < this.externalPaths.length; i++) {
-            if (pathname.indexOf(this.externalPaths[i]) == 0) {
-                isExternalFile = true;
-                break;
+    servePath(pathname) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let physicalPath = this.resolve(pathname);
+            if (!physicalPath) {
+                return { statusCode: StatusCode.Forbidden, fileStream: this.createReadble(errorPages.NotFound) };
             }
-        }
-        // Make sure we're not trying to access a
-        // file outside of the root.
-        if (pathname.indexOf(that.root) === 0 || isExternalFile) {
-            fs.stat(pathname, function (e, stat) {
-                if (e) {
-                    console.log(`File ${pathname} is not exists.`);
-                    finish(404, {});
-                }
-                else if (stat.isFile()) { // Stream a single file.
-                    that.respond(null, status, headers, [pathname], stat, req, res, finish);
-                }
-                else if (stat.isDirectory()) { // Stream a directory of files.
-                    that.serveDir(pathname, req, res, finish);
-                }
-                else {
-                    finish(400, {});
-                }
-            });
-        }
-        else {
-            // Forbidden
-            finish(403, {});
-        }
-        return promise;
-    }
-    respond(pathname, status, _headers, files, stat, req, res, finish) {
-        var contentType = _headers['Content-Type'] || mime.getType(files[0]) ||
-            'application/octet-stream';
-        if (this.options.gzip) {
-            this.respondGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
-        }
-        else {
-            this.respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
-        }
+            if (typeof physicalPath == "string") {
+                if (!fs.existsSync(physicalPath))
+                    return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
+                let stream = fs.createReadStream(physicalPath);
+                return { statusCode: StatusCode.OK, fileStream: stream };
+            }
+            return this.serveDir(physicalPath);
+        });
     }
     /** 将路径转化为物理路径 */
     resolve(pathname) {
-        for (let key in this.virtualPaths) {
-            if (pathname == key) {
-                return path.join(this.virtualPaths[key], pathname.substring(key.length));
-            }
+        pathname = pathname.trim();
+        if (pathname[0] == "/")
+            pathname = pathname.substr(1);
+        if (pathname[pathname.length - 1] == "/")
+            pathname = pathname.substr(0, pathname.length - 1);
+        if (pathname == "")
+            return this.rootDir;
+        let physicalPath = this.rootDir.childFile(pathname);
+        if (physicalPath) {
+            return physicalPath;
         }
-        return path.join(this.root, pathname);
-    }
-    serve(req, res, callback) {
-        var that = this, promise = new (events.EventEmitter), pathname;
-        var finish = function (status, headers) {
-            that.finish(status, headers, req, res, promise, callback);
-        };
-        try {
-            pathname = decodeURI(url.parse(req.url).pathname);
-        }
-        catch (e) {
-            return process.nextTick(function () {
-                return finish(400, {});
-            });
-        }
-        process.nextTick(function () {
-            that.servePath(pathname, 200, {}, req, res, finish).on('success', function (result) {
-                promise.emit('success', result);
-            }).on('error', function (err) {
-                promise.emit('error');
-            });
-        });
-        if (!callback) {
-            return promise;
-        }
-    }
-    gzipOk(req, contentType) {
-        var enable = this.options.gzip;
-        if (enable &&
-            (typeof enable === 'boolean' ||
-                (contentType && (enable instanceof RegExp) && enable.test(contentType)))) {
-            var acceptEncoding = req.headers['accept-encoding'];
-            return acceptEncoding && acceptEncoding.indexOf("gzip") >= 0;
-        }
-        return false;
-    }
-    respondGzip(pathname, status, contentType, _headers, files, stat, req, res, finish) {
-        var that = this;
-        if (files.length == 1 && this.gzipOk(req, contentType)) {
-            var gzFile = files[0] + ".gz";
-            fs.stat(gzFile, function (e, gzStat) {
-                if (!e && gzStat.isFile()) {
-                    var vary = _headers['Vary'];
-                    _headers['Vary'] = (vary && vary != 'Accept-Encoding' ? vary + ', ' : '') + 'Accept-Encoding';
-                    _headers['Content-Encoding'] = 'gzip';
-                    stat.size = gzStat.size;
-                    files = [gzFile];
-                }
-                that.respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
-            });
-        }
-        else {
-            // Client doesn't want gzip or we're sending multiple files
-            that.respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
-        }
+        let childDir = this.rootDir.childDirectory(pathname);
+        return childDir;
     }
     respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish) {
         let mtime = typeof stat.mtime == "string" ? Date.parse(stat.mtime) : stat.mtime.valueOf(), key = pathname || files[0], headers = {}, clientETag = req.headers['if-none-match'], clientMTime = Date.parse(req.headers['if-modified-since']), startByte = 0, length = stat.size, byteRange = this.parseByteRange(req, stat);

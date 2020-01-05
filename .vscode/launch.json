@@ -5,7 +5,8 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceRoot}/examples/file-server.js",
+            // "program": "${workspaceRoot}/examples/file-server.js",
+            "program": "${workspaceRoot}/test/index.js",
             "cwd": "${workspaceFolder}/examples"
         }
     ]
