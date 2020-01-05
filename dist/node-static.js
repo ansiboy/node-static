@@ -44,8 +44,6 @@ class Server {
             for (let key in options.virtualPaths) {
                 let virtualPath = key;
                 let physicalPath = options.virtualPaths[key];
-                // if (!path.isAbsolute(physicalPath))
-                //     throw errors.vitualPathRequirePhysicalPath(virtualPath, physicalPath)
                 if (fs.statSync(physicalPath).isDirectory()) {
                     this.rootDir.addvirtualDirectory(virtualPath, physicalPath, "merge");
                 }

@@ -36,7 +36,7 @@ describe("Server", function () {
         //=================================================================
         // 将文件夹 data/dir2 文件夹加入后，data/dir2/1.txt 将会覆盖掉 data/dir1/1.txt
         let root = new VirtualDirectory(path.join(__dirname, "data/dir1"));
-        root.addPhysicalPath(path.join(__dirname, "data/dir2"));
+        root.addPhysicalDirectory(path.join(__dirname, "data/dir2"));
         root.addvirtualDirectory("data-dir3", path.join(__dirname, "data/dir3"), "merge");
         //=================================================================
 

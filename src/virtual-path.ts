@@ -25,7 +25,7 @@ export class VirtualDirectory {
         }
 
         physicalPaths.forEach(physicalPath => {
-            this.addPhysicalPath(physicalPath);
+            this.addPhysicalDirectory(physicalPath);
         })
     }
 
@@ -37,22 +37,32 @@ export class VirtualDirectory {
         return this._childDirectories;
     }
 
-    addPhysicalPath(physicalPath: string) {
+    /**
+     * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
+     * @param dirPath 物理路径
+     */
+    addPhysicalDirectory(dirPath: string) {
+        
+        if (!path.isAbsolute(dirPath))
+            throw errors.notPhysicalPath(dirPath);
 
-        if (!fs.statSync(physicalPath).isDirectory())
-            throw errors.pathNotDirectory(physicalPath);
+        if (!fs.existsSync(dirPath))
+            throw errors.physicalPathNotExists(dirPath);
 
-        this.physicalPaths.push(physicalPath);
-        let names = fs.readdirSync(physicalPath);
+        if (!fs.statSync(dirPath).isDirectory())
+            throw errors.pathNotDirectory(dirPath);
+
+        this.physicalPaths.push(dirPath);
+        let names = fs.readdirSync(dirPath);
         names.forEach(name => {
-            let childPhysicalPath = path.join(physicalPath, name);
+            let childPhysicalPath = path.join(dirPath, name);
             if (!fs.statSync(childPhysicalPath).isDirectory()) {
                 return;
             }
 
             if (this._childDirectories[name]) {
                 console.assert(fs.statSync(childPhysicalPath).isDirectory());
-                this._childDirectories[name].addPhysicalPath(childPhysicalPath);
+                this._childDirectories[name].addPhysicalDirectory(childPhysicalPath);
             }
             else {
                 this._childDirectories[name] = new VirtualDirectory(childPhysicalPath);
@@ -185,7 +195,7 @@ export class VirtualDirectory {
             }
             else {
                 console.assert(operationExists == "merge");
-                childDir.addPhysicalPath(physicalPath);
+                childDir.addPhysicalDirectory(physicalPath);
             }
             return;
         }

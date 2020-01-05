@@ -49,13 +49,13 @@ describe("VirtualDirectory", function () {
         assert.equal(names2.length, 2);
     })
 
-    it("addPhysicalPath", function () {
+    it("addPhysicalDirectory", function () {
 
         let childDir1 = Object.assign({}, rootDir.childDirectories);
         let names1 = Object.getOwnPropertyNames(childDir1);
         let files1 = rootDir.filePhysicalPaths();
         // console.log(files1);
-        rootDir.addPhysicalPath(path.join(__dirname, "data/dir3"));
+        rootDir.addPhysicalDirectory(path.join(__dirname, "data/dir3"));
 
         let childDir2 = Object.assign({}, rootDir.childDirectories);
         let names2 = Object.getOwnPropertyNames(childDir2);

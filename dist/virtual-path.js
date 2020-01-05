@@ -23,7 +23,7 @@ class VirtualDirectory {
                 throw errors_1.errors.pathNotDirectory(physicalPath);
         }
         physicalPaths.forEach(physicalPath => {
-            this.addPhysicalPath(physicalPath);
+            this.addPhysicalDirectory(physicalPath);
         });
     }
     get name() {
@@ -32,19 +32,27 @@ class VirtualDirectory {
     get childDirectories() {
         return this._childDirectories;
     }
-    addPhysicalPath(physicalPath) {
-        if (!fs.statSync(physicalPath).isDirectory())
-            throw errors_1.errors.pathNotDirectory(physicalPath);
-        this.physicalPaths.push(physicalPath);
-        let names = fs.readdirSync(physicalPath);
+    /**
+     * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
+     * @param dirPath 物理路径
+     */
+    addPhysicalDirectory(dirPath) {
+        if (!path.isAbsolute(dirPath))
+            throw errors_1.errors.notPhysicalPath(dirPath);
+        if (!fs.existsSync(dirPath))
+            throw errors_1.errors.physicalPathNotExists(dirPath);
+        if (!fs.statSync(dirPath).isDirectory())
+            throw errors_1.errors.pathNotDirectory(dirPath);
+        this.physicalPaths.push(dirPath);
+        let names = fs.readdirSync(dirPath);
         names.forEach(name => {
-            let childPhysicalPath = path.join(physicalPath, name);
+            let childPhysicalPath = path.join(dirPath, name);
             if (!fs.statSync(childPhysicalPath).isDirectory()) {
                 return;
             }
             if (this._childDirectories[name]) {
                 console.assert(fs.statSync(childPhysicalPath).isDirectory());
-                this._childDirectories[name].addPhysicalPath(childPhysicalPath);
+                this._childDirectories[name].addPhysicalDirectory(childPhysicalPath);
             }
             else {
                 this._childDirectories[name] = new VirtualDirectory(childPhysicalPath);
@@ -160,7 +168,7 @@ class VirtualDirectory {
             }
             else {
                 console.assert(operationExists == "merge");
-                childDir.addPhysicalPath(physicalPath);
+                childDir.addPhysicalDirectory(physicalPath);
             }
             return;
         }
