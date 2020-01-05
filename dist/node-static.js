@@ -108,7 +108,7 @@ class Server {
     serveFile(pathname, status, headers, req, res) {
         var that = this;
         var promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname, req);
+        pathname = this.resolve(pathname);
         fs.stat(pathname, function (e, stat) {
             if (e) {
                 return promise.emit('error', e);
@@ -152,8 +152,9 @@ class Server {
         }
     }
     servePath(pathname, status, headers, req, res, finish) {
-        var that = this, promise = new (events.EventEmitter);
-        pathname = this.resolve(pathname, req);
+        var that = this;
+        var promise = new (events.EventEmitter);
+        pathname = this.resolve(pathname);
         let isExternalFile = false;
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (pathname.indexOf(this.externalPaths[i]) == 0) {
@@ -196,14 +197,14 @@ class Server {
             this.respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish);
         }
     }
-    resolve(pathname, req) {
+    /** 将路径转化为物理路径 */
+    resolve(pathname) {
         for (let key in this.virtualPaths) {
             if (pathname == key) {
                 return path.join(this.virtualPaths[key], pathname.substring(key.length));
             }
         }
         return path.join(this.root, pathname);
-        //return path.resolve(path.join(this.root, pathname));
     }
     serve(req, res, callback) {
         var that = this, promise = new (events.EventEmitter), pathname;
@@ -260,7 +261,7 @@ class Server {
         }
     }
     respondNoGzip(pathname, status, contentType, _headers, files, stat, req, res, finish) {
-        var mtime = Date.parse(stat.mtime), key = pathname || files[0], headers = {}, clientETag = req.headers['if-none-match'], clientMTime = Date.parse(req.headers['if-modified-since']), startByte = 0, length = stat.size, byteRange = this.parseByteRange(req, stat);
+        let mtime = typeof stat.mtime == "string" ? Date.parse(stat.mtime) : stat.mtime.valueOf(), key = pathname || files[0], headers = {}, clientETag = req.headers['if-none-match'], clientMTime = Date.parse(req.headers['if-modified-since']), startByte = 0, length = stat.size, byteRange = this.parseByteRange(req, stat);
         /* Handle byte ranges */
         if (files.length == 1 && byteRange.valid) {
             if (byteRange.to < length) {

@@ -24,19 +24,18 @@ export declare class Server {
     private serverInfo;
     private virtualPaths;
     constructor(root: string, options?: ServerOptions);
-    serveDir(pathname: any, req: http.IncomingMessage, res: http.ServerResponse, finish: (statusCode: number, headers: {
-        [key: string]: string;
-    }) => void): void;
-    serveFile(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse): events.EventEmitter;
-    finish(status: any, headers: any, req: any, res: any, promise: any, callback?: Function): void;
+    private serveDir;
+    private serveFile;
+    private finish;
     private servePath;
     private respond;
-    resolve(pathname: string, req: http.IncomingMessage): string;
+    /** 将路径转化为物理路径 */
+    private resolve;
     serve(req: http.IncomingMessage, res: http.ServerResponse, callback?: Function): void | events.EventEmitter;
-    gzipOk(req: any, contentType: any): boolean;
-    respondGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: any, stat: any, req: any, res: any, finish: any): void;
-    respondNoGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: string[], stat: any, req: http.IncomingMessage, res: http.ServerResponse, finish: any): void;
-    stream(pathname: any, files: any, length: any, startByte: any, res: any, callback: any): void;
+    private gzipOk;
+    private respondGzip;
+    private respondNoGzip;
+    private stream;
     parseByteRange(req: any, stat: any): {
         from: number;
         to: number;
