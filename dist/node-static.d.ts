@@ -24,7 +24,9 @@ export declare class Server {
     private serverInfo;
     private virtualPaths;
     constructor(root: string, options?: ServerOptions);
-    serveDir(pathname: any, req: http.IncomingMessage, res: http.ServerResponse, finish: any): void;
+    serveDir(pathname: any, req: http.IncomingMessage, res: http.ServerResponse, finish: (statusCode: number, headers: {
+        [key: string]: string;
+    }) => void): void;
     serveFile(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse): events.EventEmitter;
     finish(status: any, headers: any, req: any, res: any, promise: any, callback?: Function): void;
     private servePath;

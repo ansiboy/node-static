@@ -18,7 +18,7 @@ interface ServerOptions {
 }
 
 type HttpHeaders = { [key: string]: string }
-
+type Finish = (statusCode: number, headers: { [key: string]: string }) => void;
 // Current version
 var version = [0, 7, 9];
 
@@ -102,7 +102,8 @@ export class Server {
         }
     }
 
-    serveDir(pathname, req: http.IncomingMessage, res: http.ServerResponse, finish) {
+    private serveDir(pathname, req: http.IncomingMessage, res: http.ServerResponse,
+        finish: (statusCode: number, headers: { [key: string]: string }) => void) {
         var htmlIndex = path.join(pathname, this.options.indexFile),
             that = this;
 
@@ -133,11 +134,11 @@ export class Server {
         }
     }
 
-    serveFile(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse) {
+    private serveFile(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse) {
         var that = this;
         var promise = new (events.EventEmitter);
 
-        pathname = this.resolve(pathname, req);
+        pathname = this.resolve(pathname);
 
         fs.stat(pathname, function (e, stat) {
             if (e) {
@@ -150,7 +151,7 @@ export class Server {
         return promise;
     }
 
-    finish(status, headers, req, res, promise, callback?: Function) {
+    private finish(status, headers, req, res, promise, callback?: Function) {
         var result = {
             status: status,
             headers: headers,
@@ -183,11 +184,11 @@ export class Server {
         }
     }
 
-    private servePath(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse, finish: Function) {
-        var that = this,
-            promise = new (events.EventEmitter);
+    private servePath(pathname: string, status: number, headers: HttpHeaders, req: http.IncomingMessage, res: http.ServerResponse, finish: Finish) {
+        var that = this;
+        var promise = new (events.EventEmitter);
 
-        pathname = this.resolve(pathname, req);
+        pathname = this.resolve(pathname);
         let isExternalFile = false
         for (let i = 0; i < this.externalPaths.length; i++) {
             if (pathname.indexOf(this.externalPaths[i]) == 0) {
@@ -219,7 +220,7 @@ export class Server {
     }
 
     private respond(pathname: string, status: number, _headers: HttpHeaders, files: string[], stat: fs.Stats,
-        req: http.IncomingMessage, res: http.ServerResponse, finish: Function) {
+        req: http.IncomingMessage, res: http.ServerResponse, finish: Finish) {
 
         var contentType = _headers['Content-Type'] || mime.getType(files[0]) ||
             'application/octet-stream';
@@ -231,14 +232,14 @@ export class Server {
         }
     }
 
-    resolve(pathname: string, req: http.IncomingMessage) {
+    /** 将路径转化为物理路径 */
+    private resolve(pathname: string) {
         for (let key in this.virtualPaths) {
             if (pathname == key) {
                 return path.join(this.virtualPaths[key], pathname.substring(key.length))
             }
         }
         return path.join(this.root, pathname)
-        //return path.resolve(path.join(this.root, pathname));
     }
 
     serve(req: http.IncomingMessage, res: http.ServerResponse, callback?: Function) {
@@ -269,7 +270,7 @@ export class Server {
         if (!callback) { return promise }
     }
 
-    gzipOk(req, contentType) {
+    private gzipOk(req: { headers: { [key: string]: string } }, contentType: string) {
         var enable = this.options.gzip;
         if (enable &&
             (typeof enable === 'boolean' ||
@@ -280,7 +281,9 @@ export class Server {
         return false;
     }
 
-    respondGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files, stat, req, res, finish) {
+    private respondGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders,
+        files: string[], stat: fs.Stats, req, res, finish: Finish) {
+
         var that = this;
         if (files.length == 1 && this.gzipOk(req, contentType)) {
             var gzFile = files[0] + ".gz";
@@ -300,10 +303,9 @@ export class Server {
         }
     }
 
-    respondNoGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: string[],
-        stat, req: http.IncomingMessage, res: http.ServerResponse, finish) {
-
-        var mtime = Date.parse(stat.mtime),
+    private respondNoGzip(pathname: string, status: number, contentType: string, _headers: HttpHeaders, files: string[],
+        stat: fs.Stats, req: http.IncomingMessage, res: http.ServerResponse, finish: Finish) {
+        let mtime: number = typeof stat.mtime == "string" ? Date.parse(stat.mtime) : stat.mtime.valueOf(),
             key = pathname || files[0],
             headers = {},
             clientETag = req.headers['if-none-match'],
@@ -377,7 +379,7 @@ export class Server {
         }
     }
 
-    stream(pathname, files, length, startByte, res, callback) {
+    private stream(pathname: string, files: string[], length: number, startByte: number, res, callback) {
         (function streamFile(files, offset) {
             var file = files.shift();
 
