@@ -31,5 +31,5 @@ export declare class VirtualDirectory {
     /** 添加子虚拟文件夹 */
     addvirtualDirectory(virtualPath: string, physicalPath: string, operationExists: "replace" | "merge"): void;
     /** 添加子虚拟文件 */
-    addvirtualFile(virtualPath: string, physicalPath: string): void;
+    addVirtualFile(virtualPath: string, physicalPath: string): void;
 }

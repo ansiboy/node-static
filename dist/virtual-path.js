@@ -175,13 +175,13 @@ class VirtualDirectory {
         parentDir._childDirectories[dirName] = new VirtualDirectory(physicalPath);
     }
     /** 添加子虚拟文件 */
-    addvirtualFile(virtualPath, physicalPath) {
+    addVirtualFile(virtualPath, physicalPath) {
         if (!virtualPath)
             throw errors_1.errors.argumentNull("virtualPath");
         if (!physicalPath)
             throw errors_1.errors.argumentNull("physicalPath");
-        if (!fs.statSync(physicalPath).isFile())
-            throw errors_1.errors.pathNotFile(physicalPath);
+        // if (!fs.statSync(physicalPath).isFile())
+        //     throw errors.pathNotFile(physicalPath);
         let names = virtualPath.split("/").filter(o => o);
         let parentDir = this;
         if (names.length > 1) {

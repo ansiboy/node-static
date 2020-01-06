@@ -21,28 +21,20 @@ export declare enum StatusCode {
     BadRequest = 400,
     Forbidden = 403
 }
+declare type ServeResult = {
+    statusCode: StatusCode;
+    fileStream: Readable;
+    physicalPath?: string;
+};
 export declare class Server {
     private options;
-    private defaultHeaders;
-    private serverInfo;
     private rootDir;
     constructor(root: string | VirtualDirectory, options?: ServerOptions);
     serve(req: http.IncomingMessage, res: http.ServerResponse): Promise<void>;
     private serveDir;
     private createReadble;
-    private finish;
-    protected servePath(pathname: string): Promise<{
-        statusCode: StatusCode;
-        fileStream: Readable;
-    }>;
+    protected servePath(pathname: string): Promise<ServeResult>;
     /** 将路径转化为物理路径 */
     private resolve;
-    private respondNoGzip;
-    private stream;
-    parseByteRange(req: any, stat: any): {
-        from: number;
-        to: number;
-        valid: boolean;
-    };
 }
 export {};

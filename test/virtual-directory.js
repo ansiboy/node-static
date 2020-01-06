@@ -69,12 +69,12 @@ describe("VirtualDirectory", function () {
         );
     })
 
-    it("addvirtualFile", function () {
+    it("addVirtualFile", function () {
 
         let files1 = rootDir.filePhysicalPaths();
         let names1 = Object.getOwnPropertyNames(files1);
 
-        rootDir.addvirtualFile("12.jpg", path.join(__dirname, "aaa.jpg"));
+        rootDir.addVirtualFile("12.jpg", path.join(__dirname, "aaa.jpg"));
 
         let files2 = rootDir.filePhysicalPaths();
         let names2 = Object.getOwnPropertyNames(files2);

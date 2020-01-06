@@ -204,12 +204,12 @@ export class VirtualDirectory {
     }
 
     /** 添加子虚拟文件 */
-    addvirtualFile(virtualPath: string, physicalPath: string) {
+    addVirtualFile(virtualPath: string, physicalPath: string) {
         if (!virtualPath) throw errors.argumentNull("virtualPath");
         if (!physicalPath) throw errors.argumentNull("physicalPath");
 
-        if (!fs.statSync(physicalPath).isFile())
-            throw errors.pathNotFile(physicalPath);
+        // if (!fs.statSync(physicalPath).isFile())
+        //     throw errors.pathNotFile(physicalPath);
 
         let names = virtualPath.split("/").filter(o => o);
         let parentDir: VirtualDirectory = this;
