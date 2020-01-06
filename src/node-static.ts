@@ -10,8 +10,8 @@ interface ServerOptions {
     headers?: HttpHeaders
     indexFile?: string
     serverInfo?: string
-    externalPaths?: string[],
-    virtualPaths?: { [virtualPath: string]: string }
+    // externalPaths?: string[],
+    // virtualPaths?: { [virtualPath: string]: string }
 }
 
 type HttpHeaders = { [key: string]: string }
@@ -46,20 +46,6 @@ export class Server {
         else
             this.rootDir = root;
 
-        if (options.virtualPaths) {
-            for (let key in options.virtualPaths) {
-                let virtualPath = key
-                let physicalPath = options.virtualPaths[key]
-                if (fs.statSync(physicalPath).isDirectory()) {
-                    this.rootDir.addvirtualDirectory(virtualPath, physicalPath, "merge");
-                }
-                else {
-                    this.rootDir.addVirtualFile(virtualPath, physicalPath);
-                }
-            }
-        }
-
-
         this.options.headers = this.options.headers || {};
         this.options.indexFile = this.options.indexFile || "index.html";
 
@@ -87,15 +73,17 @@ export class Server {
             "Date": new Date().toUTCString(),
         };
 
+        let stat = fs.statSync(r.physicalPath);
+        let mtime: number = stat.mtime.valueOf();
+        Object.assign(headers, {
+            "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
+            "Last-Modified": stat.mtime.toDateString(),
+            "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
+            "Content-Length": stat.size
+        })
+
         if (r.physicalPath) {
-            let stat = fs.statSync(r.physicalPath);
-            let mtime: number = stat.mtime.valueOf();
-            Object.assign(headers, {
-                "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
-                "Last-Modified": stat.mtime.toDateString(),
-                "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
-                "Content-Length": stat.size
-            })
+            headers["Physical-Path"] = r.physicalPath;
         }
 
         res.writeHead(r.statusCode, headers);
@@ -105,7 +93,7 @@ export class Server {
 
     private async serveDir(dir: VirtualDirectory): Promise<ServeResult> {
 
-        let htmlIndex = dir.childFile(this.options.indexFile);
+        let htmlIndex = dir.getFile(this.options.indexFile);
 
         if (!fs.existsSync(htmlIndex)) {
             return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
@@ -153,12 +141,12 @@ export class Server {
         if (pathname == "")
             return this.rootDir;
 
-        let physicalPath = this.rootDir.childFile(pathname);
+        let physicalPath = this.rootDir.getFile(pathname);
         if (physicalPath) {
             return physicalPath;
         }
 
-        let childDir = this.rootDir.childDirectory(pathname);
+        let childDir = this.rootDir.getDirectory(pathname);
         return childDir;
     }
 }

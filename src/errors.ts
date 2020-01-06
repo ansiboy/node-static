@@ -50,6 +50,12 @@ export let errors = {
         error.name = name;
         return error;
     },
+    directoryExists(path: string) {
+        let error = new Error(`Directory ${path} is exists.`);
+        let name: keyof typeof errors = "directoryExists";
+        error.name = name;
+        return error;
+    },
     physicalPathNotExists(physicalPath: string) {
         let error = new Error(`Directory ${physicalPath} is not exists.`);
         let name: keyof typeof errors = "physicalPathNotExists";
