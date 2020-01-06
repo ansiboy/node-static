@@ -6,10 +6,6 @@ interface ServerOptions {
     headers?: HttpHeaders;
     indexFile?: string;
     serverInfo?: string;
-    externalPaths?: string[];
-    virtualPaths?: {
-        [virtualPath: string]: string;
-    };
 }
 declare type HttpHeaders = {
     [key: string]: string;

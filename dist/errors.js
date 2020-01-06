@@ -52,6 +52,12 @@ exports.errors = {
         error.name = name;
         return error;
     },
+    directoryExists(path) {
+        let error = new Error(`Directory ${path} is exists.`);
+        let name = "directoryExists";
+        error.name = name;
+        return error;
+    },
     physicalPathNotExists(physicalPath) {
         let error = new Error(`Directory ${physicalPath} is not exists.`);
         let name = "physicalPathNotExists";

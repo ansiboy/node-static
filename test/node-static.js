@@ -37,7 +37,7 @@ describe("Server", function () {
         // 将文件夹 data/dir2 文件夹加入后，data/dir2/1.txt 将会覆盖掉 data/dir1/1.txt
         let root = new VirtualDirectory(path.join(__dirname, "data/dir1"));
         root.addPhysicalDirectory(path.join(__dirname, "data/dir2"));
-        root.addvirtualDirectory("data-dir3", path.join(__dirname, "data/dir3"), "merge");
+        root.addVirtualDirectory("data-dir3", path.join(__dirname, "data/dir3"), "merge");
         //=================================================================
 
         it("文件路径覆盖", async function () {
@@ -104,6 +104,20 @@ describe("Server", function () {
             assert.equal(content, "dir3-1.txt");
         })
 
+    })
+
+    describe("addVirtualFile", function () {
+        //=================================================================
+        // 将文件夹 data/dir2 文件夹加入后，data/dir2/1.txt 将会覆盖掉 data/dir1/1.txt
+        let root = new VirtualDirectory(path.join(__dirname, "data/dir1"));
+        root.addPhysicalDirectory(path.join(__dirname, "data/dir2"));
+        root.addVirtualDirectory("data-dir3", path.join(__dirname, "data/dir3"), "merge");
+        //=================================================================
+
+        let filePhysicalPath = path.join(__dirname, "data/dir3/1.txt");
+        root.addVirtualFile("modules/index.js", filePhysicalPath);
+        let file = root.getFile("modules/index.js");
+        assert.equal(file, filePhysicalPath);
     })
 
 

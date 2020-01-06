@@ -7,6 +7,7 @@ export declare let errors: {
     virtualPathStartsWithSlash(path: string): Error;
     virtualPathEndsWithSlash(path: string): Error;
     directoryNotExists(path: string): Error;
+    directoryExists(path: string): Error;
     physicalPathNotExists(physicalPath: string): Error;
     filePahtExists(path: string): Error;
     pathNotDirectory(path: string): Error;
