@@ -20,8 +20,9 @@ class VirtualDirectory {
                 throw errors_1.errors.pathNotDirectory(physicalPath);
         }
         physicalPaths.forEach(physicalPath => {
-            this.addPhysicalDirectory(physicalPath);
+            this.checkPhysicalPath(physicalPath);
         });
+        this.physicalPaths = physicalPaths;
     }
     getChildDirectories() {
         for (let i = 0; i < this.physicalPaths.length; i++) {
@@ -36,18 +37,32 @@ class VirtualDirectory {
         }
         return this.childDirs;
     }
+    getPhysicalPaths() {
+        return this.physicalPaths;
+    }
     /**
      * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
      * @param dirPath 物理路径
+     * @param index 物理路径索引，默认添加到最后
      */
-    addPhysicalDirectory(dirPath) {
-        if (!path.isAbsolute(dirPath))
-            throw errors_1.errors.notPhysicalPath(dirPath);
-        if (!fs.existsSync(dirPath))
-            throw errors_1.errors.physicalPathNotExists(dirPath);
-        if (!fs.statSync(dirPath).isDirectory())
-            throw errors_1.errors.pathNotDirectory(dirPath);
-        this.physicalPaths.push(dirPath);
+    addPhysicalDirectory(dirPath, index) {
+        this.checkPhysicalPath(dirPath);
+        index = index == null ? this.physicalPaths.length : index;
+        this.physicalPaths.splice(index, 0, dirPath);
+        for (let name in this.childDirs) {
+            let childPhysicalPath = path.join(dirPath, name);
+            if (fs.existsSync(childPhysicalPath)) {
+                this.childDirs[name].addPhysicalDirectory(childPhysicalPath, index);
+            }
+        }
+    }
+    checkPhysicalPath(physicalPath) {
+        if (!path.isAbsolute(physicalPath))
+            throw errors_1.errors.notPhysicalPath(physicalPath);
+        if (!fs.existsSync(physicalPath))
+            throw errors_1.errors.physicalPathNotExists(physicalPath);
+        if (!fs.statSync(physicalPath).isDirectory())
+            throw errors_1.errors.pathNotDirectory(physicalPath);
     }
     /** 该文件夹下文件的物理路径 */
     getChildFiles() {

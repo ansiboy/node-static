@@ -6,11 +6,14 @@ export declare class VirtualDirectory {
     getChildDirectories(): {
         [name: string]: VirtualDirectory;
     };
+    getPhysicalPaths(): string[];
     /**
      * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
      * @param dirPath 物理路径
+     * @param index 物理路径索引，默认添加到最后
      */
     private addPhysicalDirectory;
+    private checkPhysicalPath;
     /** 该文件夹下文件的物理路径 */
     getChildFiles(): {
         [name: string]: string;

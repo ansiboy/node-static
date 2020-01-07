@@ -1,5 +1,6 @@
 const path = require("path");
 const assert = require("assert");
+const fs = require("fs");
 
 const { VirtualDirectory } = require("../dist/virtual-path");
 
@@ -81,5 +82,35 @@ describe("VirtualDirectory", function () {
 
         assert.equal(names2.length, names1.length + 1);
         assert.ok(names2.indexOf("12.jpg") >= 0);
+    })
+
+    it("addPhysicalDirectory", function () {
+        let rootDir = new VirtualDirectory(
+            path.join(__dirname, "data/dir1"),
+            path.join(__dirname, "data/dir2")
+        );
+
+        let filesDic = rootDir.getChildFiles();
+        let files = Object.getOwnPropertyNames(filesDic).map(n => filesDic[n]);
+        console.log(files);
+        assert.notEqual(filesDic["1.txt"], null);
+        let txt1 = fs.readFileSync(filesDic["1.txt"]).toString();
+        assert.equal(txt1, "dir2-1.txt");
+
+        let physicalPaths0 = [...rootDir.getPhysicalPaths()];
+        console.log(physicalPaths0);
+
+        rootDir.addPhysicalDirectory(path.join(__dirname, "data/dir3"));
+        let physicalPaths1 = [...rootDir.getPhysicalPaths()];
+        console.log(physicalPaths1);
+
+        assert.equal(physicalPaths1.length, physicalPaths0.length + 1);
+
+        filesDic = rootDir.getChildFiles();
+        files = Object.getOwnPropertyNames(filesDic).map(n => filesDic[n]);
+
+        txt1 = fs.readFileSync(filesDic["1.txt"]).toString();
+        assert.equal(txt1, "dir3-1.txt");
+
     })
 })

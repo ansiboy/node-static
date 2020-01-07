@@ -22,8 +22,9 @@ export class VirtualDirectory {
         }
 
         physicalPaths.forEach(physicalPath => {
-            this.addPhysicalDirectory(physicalPath);
+            this.checkPhysicalPath(physicalPath);
         })
+        this.physicalPaths = physicalPaths;
     }
 
     getChildDirectories() {
@@ -42,22 +43,38 @@ export class VirtualDirectory {
         return this.childDirs;
     }
 
+    getPhysicalPaths() {
+        return this.physicalPaths;
+    }
+
     /**
      * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
      * @param dirPath 物理路径
+     * @param index 物理路径索引，默认添加到最后
      */
-    private addPhysicalDirectory(dirPath: string) {
+    private addPhysicalDirectory(dirPath: string, index?: number) {
 
-        if (!path.isAbsolute(dirPath))
-            throw errors.notPhysicalPath(dirPath);
+        this.checkPhysicalPath(dirPath);
 
-        if (!fs.existsSync(dirPath))
-            throw errors.physicalPathNotExists(dirPath);
+        index = index == null ? this.physicalPaths.length : index;
+        this.physicalPaths.splice(index, 0, dirPath);
+        for (let name in this.childDirs) {
+            let childPhysicalPath = path.join(dirPath, name);
+            if (fs.existsSync(childPhysicalPath)) {
+                this.childDirs[name].addPhysicalDirectory(childPhysicalPath, index);
+            }
+        }
+    }
 
-        if (!fs.statSync(dirPath).isDirectory())
-            throw errors.pathNotDirectory(dirPath);
+    private checkPhysicalPath(physicalPath: string) {
+        if (!path.isAbsolute(physicalPath))
+            throw errors.notPhysicalPath(physicalPath);
 
-        this.physicalPaths.push(dirPath);
+        if (!fs.existsSync(physicalPath))
+            throw errors.physicalPathNotExists(physicalPath);
+
+        if (!fs.statSync(physicalPath).isDirectory())
+            throw errors.pathNotDirectory(physicalPath);
 
     }
 
