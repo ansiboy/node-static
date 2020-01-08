@@ -2,11 +2,24 @@ export declare class VirtualDirectory {
     private physicalPaths;
     private childDirs;
     private childFiles;
+    private name;
+    private virtualPath;
+    private parent;
     constructor(...physicalPaths: string[]);
+    getName(): string;
+    getParent(): VirtualDirectory;
+    getPhysicalPaths(): string[];
+    getVirtualPath(): string;
     getChildDirectories(): {
         [name: string]: VirtualDirectory;
     };
-    getPhysicalPaths(): string[];
+    /**
+     * 创建子文件夹，如果子文件夹已经存在，则覆盖原来的子文件夹
+     * @param parent 父文件夹
+     * @param name 文件夹名称
+     * @param physicalPaths 文件夹对应的物理文件路径
+     */
+    private createChild;
     /**
      * 添加虚拟文件夹对应的物理文件夹，一个虚拟文件夹，可以对应多个物理文件夹
      * @param dirPath 物理路径
@@ -36,7 +49,11 @@ export declare class VirtualDirectory {
     private static checkVirtualPath;
     /** 添加子虚拟文件夹 */
     addVirtualDirectory(virtualPath: string, physicalPath: string, operationExists: "replace" | "merge"): void;
-    private addEmptyVirtualDirectory;
+    /**
+     * 添加空白虚拟目录，是指虚拟目录对应的目录路径为空
+     * @param virtualPath 虚拟目录
+     */
+    private addEmptyDirectoryIfNotExists;
     /** 添加子虚拟文件 */
     addVirtualFile(virtualPath: string, physicalPath: string): void;
 }

@@ -2,6 +2,8 @@
 import http = require('http');
 import { VirtualDirectory } from './virtual-path';
 import { Readable } from "stream";
+import { StatusCode } from "maishu-chitu-service";
+export { StatusCode } from "maishu-chitu-service";
 interface ServerOptions {
     headers?: HttpHeaders;
     indexFile?: string;
@@ -10,13 +12,6 @@ interface ServerOptions {
 declare type HttpHeaders = {
     [key: string]: string;
 };
-export declare enum StatusCode {
-    NotFound = 404,
-    OK = 200,
-    Redirect = 301,
-    BadRequest = 400,
-    Forbidden = 403
-}
 declare type ServeResult = {
     statusCode: StatusCode;
     fileStream: Readable;
@@ -33,4 +28,3 @@ export declare class Server {
     /** 将路径转化为物理路径 */
     private resolve;
 }
-export {};

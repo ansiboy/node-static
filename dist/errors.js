@@ -81,6 +81,12 @@ exports.errors = {
         let name = "pathNotFile";
         error.name = name;
         return error;
+    },
+    physicalPathExists(physicalPath, dirName) {
+        let error = new Error(`Physical path '${physicalPath}' is exists in directory '${dirName}'.`);
+        let name = "physicalPathExists";
+        error.name = name;
+        return error;
     }
 };
 //# sourceMappingURL=errors.js.map

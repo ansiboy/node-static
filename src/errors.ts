@@ -79,5 +79,11 @@ export let errors = {
         let name: keyof typeof errors = "pathNotFile";
         error.name = name;
         return error;
+    },
+    physicalPathExists(physicalPath: string, dirName: string) {
+        let error = new Error(`Physical path '${physicalPath}' is exists in directory '${dirName}'.`);
+        let name: keyof typeof errors = "physicalPathExists";
+        error.name = name;
+        return error;
     }
 }

@@ -12,4 +12,5 @@ export declare let errors: {
     filePahtExists(path: string): Error;
     pathNotDirectory(path: string): Error;
     pathNotFile(path: string): Error;
+    physicalPathExists(physicalPath: string, dirName: string): Error;
 };

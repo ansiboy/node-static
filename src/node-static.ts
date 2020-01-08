@@ -5,6 +5,8 @@ import mime = require('mime')
 import { errors } from './errors';
 import { VirtualDirectory } from './virtual-path'
 import { Readable } from "stream";
+import { StatusCode } from "maishu-chitu-service";
+export { StatusCode } from "maishu-chitu-service";
 
 interface ServerOptions {
     headers?: HttpHeaders
@@ -15,13 +17,13 @@ interface ServerOptions {
 type HttpHeaders = { [key: string]: string }
 var version = require("../package.json")["version"];
 
-export enum StatusCode {
-    NotFound = 404,
-    OK = 200,
-    Redirect = 301,
-    BadRequest = 400,
-    Forbidden = 403,
-}
+// export enum StatusCode {
+//     NotFound = 404,
+//     OK = 200,
+//     Redirect = 301,
+//     BadRequest = 400,
+//     Forbidden = 403,
+// }
 
 let errorPages = {
     NotFound: "Not Found",
@@ -71,17 +73,16 @@ export class Server {
             "Date": new Date().toUTCString(),
         };
 
-        let stat = fs.statSync(r.physicalPath);
-        let mtime: number = stat.mtime.valueOf();
-        Object.assign(headers, {
-            "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
-            "Last-Modified": stat.mtime.toDateString(),
-            "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
-            "Content-Length": stat.size
-        })
-
         if (r.physicalPath) {
-            headers["Physical-Path"] = r.physicalPath;
+            let stat = fs.statSync(r.physicalPath);
+            let mtime: number = stat.mtime.valueOf();
+            Object.assign(headers, {
+                "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
+                "Last-Modified": stat.mtime.toDateString(),
+                "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
+                "Content-Length": stat.size,
+                "Physical-Path": r.physicalPath,
+            })
         }
 
         res.writeHead(r.statusCode, headers);

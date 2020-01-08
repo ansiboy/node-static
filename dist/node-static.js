@@ -15,15 +15,17 @@ const mime = require("mime");
 const errors_1 = require("./errors");
 const virtual_path_1 = require("./virtual-path");
 const stream_1 = require("stream");
+const maishu_chitu_service_1 = require("maishu-chitu-service");
+var maishu_chitu_service_2 = require("maishu-chitu-service");
+exports.StatusCode = maishu_chitu_service_2.StatusCode;
 var version = require("../package.json")["version"];
-var StatusCode;
-(function (StatusCode) {
-    StatusCode[StatusCode["NotFound"] = 404] = "NotFound";
-    StatusCode[StatusCode["OK"] = 200] = "OK";
-    StatusCode[StatusCode["Redirect"] = 301] = "Redirect";
-    StatusCode[StatusCode["BadRequest"] = 400] = "BadRequest";
-    StatusCode[StatusCode["Forbidden"] = 403] = "Forbidden";
-})(StatusCode = exports.StatusCode || (exports.StatusCode = {}));
+// export enum StatusCode {
+//     NotFound = 404,
+//     OK = 200,
+//     Redirect = 301,
+//     BadRequest = 400,
+//     Forbidden = 403,
+// }
 let errorPages = {
     NotFound: "Not Found",
     Forbidden: "Forbidden",
@@ -52,7 +54,7 @@ class Server {
                 pathname = decodeURI(url.parse(req.url).pathname);
             }
             catch (e) {
-                r = { statusCode: StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) };
+                r = { statusCode: maishu_chitu_service_1.StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) };
             }
             if (pathname)
                 r = yield this.servePath(pathname);
@@ -60,16 +62,16 @@ class Server {
             let headers = {
                 "Date": new Date().toUTCString(),
             };
-            let stat = fs.statSync(r.physicalPath);
-            let mtime = stat.mtime.valueOf();
-            Object.assign(headers, {
-                "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
-                "Last-Modified": stat.mtime.toDateString(),
-                "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
-                "Content-Length": stat.size
-            });
             if (r.physicalPath) {
-                headers["Physical-Path"] = r.physicalPath;
+                let stat = fs.statSync(r.physicalPath);
+                let mtime = stat.mtime.valueOf();
+                Object.assign(headers, {
+                    "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
+                    "Last-Modified": stat.mtime.toDateString(),
+                    "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
+                    "Content-Length": stat.size,
+                    "Physical-Path": r.physicalPath,
+                });
             }
             res.writeHead(r.statusCode, headers);
             r.fileStream.pipe(res);
@@ -79,10 +81,10 @@ class Server {
         return __awaiter(this, void 0, void 0, function* () {
             let htmlIndex = dir.getFile(this.options.indexFile);
             if (!fs.existsSync(htmlIndex)) {
-                return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
+                return { statusCode: maishu_chitu_service_1.StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
             }
             let stream = fs.createReadStream(htmlIndex);
-            return { statusCode: StatusCode.OK, fileStream: stream, physicalPath: htmlIndex };
+            return { statusCode: maishu_chitu_service_1.StatusCode.OK, fileStream: stream, physicalPath: htmlIndex };
         });
     }
     createReadble(text) {
@@ -95,13 +97,13 @@ class Server {
         return __awaiter(this, void 0, void 0, function* () {
             let physicalPath = this.resolve(pathname);
             if (!physicalPath) {
-                return { statusCode: StatusCode.Forbidden, fileStream: this.createReadble(errorPages.NotFound) };
+                return { statusCode: maishu_chitu_service_1.StatusCode.Forbidden, fileStream: this.createReadble(errorPages.NotFound) };
             }
             if (typeof physicalPath == "string") {
                 if (!fs.existsSync(physicalPath))
-                    return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
+                    return { statusCode: maishu_chitu_service_1.StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
                 let stream = fs.createReadStream(physicalPath);
-                return { statusCode: StatusCode.OK, fileStream: stream, physicalPath };
+                return { statusCode: maishu_chitu_service_1.StatusCode.OK, fileStream: stream, physicalPath };
             }
             return this.serveDir(physicalPath);
         });
