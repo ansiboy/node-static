@@ -32,9 +32,11 @@ class VirtualDirectory {
     getParent() {
         return this.parent;
     }
+    /** 获取虚拟文件夹所有的物理路径 */
     getPhysicalPaths() {
         return this.physicalPaths;
     }
+    /** 获取虚拟文件夹的虚拟路径 */
     getVirtualPath() {
         if (this.virtualPath)
             return this.virtualPath;
@@ -127,6 +129,22 @@ class VirtualDirectory {
         });
         Object.assign(childFilePhysicalPaths, this.childFiles);
         return childFilePhysicalPaths;
+    }
+    /** 查找虚拟文件夹下的子文件 */
+    findChildFile(fileName) {
+        for (let i = this.physicalPaths.length - 1; i >= 0; i--) {
+            let p = this.physicalPaths[i];
+            if (fs.existsSync(p) == false)
+                continue;
+            let names = fs.readdirSync(p);
+            for (let j = 0; j < names.length; j++) {
+                let childPhysicalPath = path.join(p, names[j]);
+                if (fileName == names[i] && fs.statSync(childPhysicalPath).isFile()) {
+                    return childPhysicalPath;
+                }
+            }
+        }
+        return null;
     }
     /**
      * 获取当前文件夹的子文件夹

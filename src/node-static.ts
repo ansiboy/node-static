@@ -74,15 +74,19 @@ export class Server {
         };
 
         if (r.physicalPath) {
-            let stat = fs.statSync(r.physicalPath);
-            let mtime: number = stat.mtime.valueOf();
-            Object.assign(headers, {
-                "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
-                "Last-Modified": stat.mtime.toDateString(),
-                "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
-                "Content-Length": stat.size,
-                "Physical-Path": r.physicalPath,
-            })
+
+            Object.assign(headers, { "Physical-Path": r.physicalPath });
+
+            if (fs.existsSync(r.physicalPath)) {
+                let stat = fs.statSync(r.physicalPath);
+                let mtime: number = stat.mtime.valueOf();
+                Object.assign(headers, {
+                    "Etag": JSON.stringify([stat.ino, stat.size, mtime].join('-')),
+                    "Last-Modified": stat.mtime.toDateString(),
+                    "Content-Type": req.headers["Content-Type"] || mime.getType(r.physicalPath),
+                    "Content-Length": stat.size,
+                })
+            }
         }
 
         res.writeHead(r.statusCode, headers);
@@ -95,7 +99,7 @@ export class Server {
         let htmlIndex = dir.getFile(this.options.indexFile);
 
         if (!fs.existsSync(htmlIndex)) {
-            return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
+            return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound), physicalPath: htmlIndex };
         }
 
         let stream = fs.createReadStream(htmlIndex);
@@ -119,7 +123,7 @@ export class Server {
 
         if (typeof physicalPath == "string") {
             if (!fs.existsSync(physicalPath))
-                return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound) };
+                return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound), physicalPath };
 
             let stream = fs.createReadStream(physicalPath);
             return { statusCode: StatusCode.OK, fileStream: stream, physicalPath }

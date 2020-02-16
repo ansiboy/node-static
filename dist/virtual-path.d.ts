@@ -8,7 +8,9 @@ export declare class VirtualDirectory {
     constructor(...physicalPaths: string[]);
     getName(): string;
     getParent(): VirtualDirectory;
+    /** 获取虚拟文件夹所有的物理路径 */
     getPhysicalPaths(): string[];
+    /** 获取虚拟文件夹的虚拟路径 */
     getVirtualPath(): string;
     getChildDirectories(): {
         [name: string]: VirtualDirectory;
@@ -31,6 +33,8 @@ export declare class VirtualDirectory {
     getChildFiles(): {
         [name: string]: string;
     };
+    /** 查找虚拟文件夹下的子文件 */
+    findChildFile(fileName: string): string;
     /**
      * 获取当前文件夹的子文件夹
      * @param dirName 文件夹名称
