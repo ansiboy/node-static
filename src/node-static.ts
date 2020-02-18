@@ -31,7 +31,7 @@ let errorPages = {
     BadRequest: "Bad Request"
 }
 
-type ServeResult = { statusCode: StatusCode, fileStream: Readable, physicalPath?: string };
+type ServeResult = { statusCode: StatusCode, fileStream: Readable, physicalPath?: string | null };
 
 export class Server {
     private options: ServerOptions
@@ -56,23 +56,26 @@ export class Server {
 
     async serve(req: http.IncomingMessage, res: http.ServerResponse) {
 
-        var pathname: string;
-        let r: ServeResult;
+        var pathname: string | null = null;
+        let r: ServeResult | null = null;
         try {
-            pathname = decodeURI(url.parse(req.url).pathname);
+            pathname = decodeURI(url.parse(req.url || "").pathname || "");
         }
         catch (e) {
-            r = { statusCode: StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) }
+            console.error(e);
         }
 
         if (pathname)
             r = await this.servePath(pathname);
+        else
+            r = { statusCode: StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) }
 
         //======================================
         let headers: http.OutgoingHttpHeaders = {
             "Date": new Date().toUTCString(),
         };
 
+        console.assert(r != null);
         if (r.physicalPath) {
 
             Object.assign(headers, { "Physical-Path": r.physicalPath });
@@ -96,9 +99,9 @@ export class Server {
 
     private async serveDir(dir: VirtualDirectory): Promise<ServeResult> {
 
-        let htmlIndex = dir.getFile(this.options.indexFile);
+        let htmlIndex = dir.getFile(this.options.indexFile as string);
 
-        if (!fs.existsSync(htmlIndex)) {
+        if (htmlIndex == null || !fs.existsSync(htmlIndex)) {
             return { statusCode: StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound), physicalPath: htmlIndex };
         }
 
@@ -133,7 +136,7 @@ export class Server {
     }
 
     /** 将路径转化为物理路径 */
-    private resolve(pathname: string): string | VirtualDirectory {
+    private resolve(pathname: string): string | VirtualDirectory | null {
         pathname = pathname.trim();
         if (pathname[0] == "/")
             pathname = pathname.substr(1);

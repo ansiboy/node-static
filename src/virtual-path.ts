@@ -3,13 +3,16 @@ import path = require("path");
 import fs = require("fs");
 import os = require("os");
 
+/**
+ * 虚拟文件夹
+ */
 export class VirtualDirectory {
     private physicalPaths: string[] = [];
     private childDirs: { [name: string]: VirtualDirectory } = {};
     private childFiles: { [name: string]: string } = {};
     private name: string = "";
-    private virtualPath: string;
-    private parent: VirtualDirectory | null;
+    private virtualPath: string | null = null;
+    private parent: VirtualDirectory | null = null;
 
     constructor(...physicalPaths: string[]) {
 
@@ -35,22 +38,32 @@ export class VirtualDirectory {
         return this.name;
     }
 
-    getParent(): VirtualDirectory {
+    /**
+     * 获取父文件夹
+     * @returns 父虚拟文件夹
+     */
+    getParent(): VirtualDirectory | null {
         return this.parent;
     }
 
-    /** 获取虚拟文件夹所有的物理路径 */
+    /** 
+     * 获取当前虚拟文件夹对应所有的物理路径
+     * @returns 虚拟文件夹对应所有的物理路径 
+     */
     getPhysicalPaths() {
         return this.physicalPaths;
     }
 
-    /** 获取虚拟文件夹的虚拟路径 */
+    /** 
+     * 获取虚拟文件夹的虚拟路径
+     * @returns 虚拟文件夹的虚拟路径，如果为根目录，虚拟路径为空白字符串 
+     */
     getVirtualPath(): string {
         if (this.virtualPath)
             return this.virtualPath;
 
         this.virtualPath = this.name;
-        let p: VirtualDirectory = this.parent;
+        let p: VirtualDirectory | null = this.parent;
         while (p != null) {
             this.virtualPath = path.join(p.name, this.virtualPath);
             p = p.parent;
@@ -156,7 +169,7 @@ export class VirtualDirectory {
     }
 
     /** 查找虚拟文件夹下的子文件 */
-    findChildFile(fileName: string): string {
+    findChildFile(fileName: string): string | null {
 
         for (let i = this.physicalPaths.length - 1; i >= 0; i--) {
             let p = this.physicalPaths[i];
@@ -177,7 +190,8 @@ export class VirtualDirectory {
 
     /**
      * 获取当前文件夹的子文件夹
-     * @param dirName 文件夹名称
+     * @param dirName 子文件夹的名称
+     * @returns 子文件夹的虚拟文件夹
      */
     private getChildDirectory(dirName: string) {
         if (this.childDirs[dirName])
@@ -193,10 +207,11 @@ export class VirtualDirectory {
     }
 
     /**
-     * 通过路径获取文件夹
+     * 获取文件夹的物理路径
      * @param virtualPath 文件夹的虚拟路径
+     * @returns 文件夹的物理路径
      */
-    getDirectory(virtualPath: string): VirtualDirectory {
+    getDirectory(virtualPath: string): VirtualDirectory | null {
         if (!virtualPath) throw errors.argumentNull("path");
         VirtualDirectory.checkVirtualPath(virtualPath);
 
@@ -215,10 +230,11 @@ export class VirtualDirectory {
     }
 
     /**
-     * 通过路径获取文件
+     * 获取文件的物理路径
      * @param virtualPath 文件的虚拟路径
+     * @returns 文件的物理路径
      */
-    getFile(virtualPath: string): string {
+    getFile(virtualPath: string): string | null {
         if (!virtualPath) throw errors.argumentNull("path");
         VirtualDirectory.checkVirtualPath(virtualPath);
 
@@ -226,7 +242,7 @@ export class VirtualDirectory {
 
         let fileName: string = names[names.length - 1];
         let dirPath = names.splice(0, names.length - 1).join("/");
-        let dir: VirtualDirectory = dirPath ? this.getDirectory(dirPath) : this;
+        let dir: VirtualDirectory | null = dirPath ? this.getDirectory(dirPath) : this;
 
         if (dir == null)
             return null;
