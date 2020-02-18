@@ -4,12 +4,17 @@ const errors_1 = require("./errors");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+/**
+ * 虚拟文件夹
+ */
 class VirtualDirectory {
     constructor(...physicalPaths) {
         this.physicalPaths = [];
         this.childDirs = {};
         this.childFiles = {};
         this.name = "";
+        this.virtualPath = null;
+        this.parent = null;
         if (!physicalPaths)
             throw errors_1.errors.argumentNull("physicalPaths");
         if (!Array.isArray(physicalPaths))
@@ -29,14 +34,24 @@ class VirtualDirectory {
     getName() {
         return this.name;
     }
+    /**
+     * 获取父文件夹
+     * @returns 父虚拟文件夹
+     */
     getParent() {
         return this.parent;
     }
-    /** 获取虚拟文件夹所有的物理路径 */
+    /**
+     * 获取当前虚拟文件夹对应所有的物理路径
+     * @returns 虚拟文件夹对应所有的物理路径
+     */
     getPhysicalPaths() {
         return this.physicalPaths;
     }
-    /** 获取虚拟文件夹的虚拟路径 */
+    /**
+     * 获取虚拟文件夹的虚拟路径
+     * @returns 虚拟文件夹的虚拟路径，如果为根目录，虚拟路径为空白字符串
+     */
     getVirtualPath() {
         if (this.virtualPath)
             return this.virtualPath;
@@ -148,7 +163,8 @@ class VirtualDirectory {
     }
     /**
      * 获取当前文件夹的子文件夹
-     * @param dirName 文件夹名称
+     * @param dirName 子文件夹的名称
+     * @returns 子文件夹的虚拟文件夹
      */
     getChildDirectory(dirName) {
         if (this.childDirs[dirName])
@@ -160,8 +176,9 @@ class VirtualDirectory {
         return this.createChild(this, dirName, childPhyPaths);
     }
     /**
-     * 通过路径获取文件夹
+     * 获取文件夹的物理路径
      * @param virtualPath 文件夹的虚拟路径
+     * @returns 文件夹的物理路径
      */
     getDirectory(virtualPath) {
         if (!virtualPath)
@@ -179,8 +196,9 @@ class VirtualDirectory {
         return parentDir.getChildDirectory(dirName);
     }
     /**
-     * 通过路径获取文件
+     * 获取文件的物理路径
      * @param virtualPath 文件的虚拟路径
+     * @returns 文件的物理路径
      */
     getFile(virtualPath) {
         if (!virtualPath)

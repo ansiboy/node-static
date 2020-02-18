@@ -48,20 +48,23 @@ class Server {
     }
     serve(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var pathname;
-            let r;
+            var pathname = null;
+            let r = null;
             try {
-                pathname = decodeURI(url.parse(req.url).pathname);
+                pathname = decodeURI(url.parse(req.url || "").pathname || "");
             }
             catch (e) {
-                r = { statusCode: maishu_chitu_service_1.StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) };
+                console.error(e);
             }
             if (pathname)
                 r = yield this.servePath(pathname);
+            else
+                r = { statusCode: maishu_chitu_service_1.StatusCode.BadRequest, fileStream: this.createReadble(errorPages.BadRequest) };
             //======================================
             let headers = {
                 "Date": new Date().toUTCString(),
             };
+            console.assert(r != null);
             if (r.physicalPath) {
                 Object.assign(headers, { "Physical-Path": r.physicalPath });
                 if (fs.existsSync(r.physicalPath)) {
@@ -82,7 +85,7 @@ class Server {
     serveDir(dir) {
         return __awaiter(this, void 0, void 0, function* () {
             let htmlIndex = dir.getFile(this.options.indexFile);
-            if (!fs.existsSync(htmlIndex)) {
+            if (htmlIndex == null || !fs.existsSync(htmlIndex)) {
                 return { statusCode: maishu_chitu_service_1.StatusCode.NotFound, fileStream: this.createReadble(errorPages.NotFound), physicalPath: htmlIndex };
             }
             let stream = fs.createReadStream(htmlIndex);

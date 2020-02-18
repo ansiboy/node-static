@@ -15,7 +15,7 @@ declare type HttpHeaders = {
 declare type ServeResult = {
     statusCode: StatusCode;
     fileStream: Readable;
-    physicalPath?: string;
+    physicalPath?: string | null;
 };
 export declare class Server {
     private options;
