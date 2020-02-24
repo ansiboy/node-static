@@ -85,5 +85,11 @@ export let errors = {
         let name: keyof typeof errors = "physicalPathExists";
         error.name = name;
         return error;
+    },
+    invalidVirtualPath(virtualPath: string) {
+        let error = new Error(`Path '${virtualPath}' is a invalid path.`);
+        let name: keyof typeof errors = "invalidVirtualPath";
+        error.name = name;
+        return error;
     }
 }

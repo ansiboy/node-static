@@ -1,6 +1,6 @@
 {
   "name": "maishu-node-static",
-  "version": "1.8.0",
+  "version": "1.8.2",
   "description": "simple, compliant file streaming module for node",
   "url": "http://github.com/ansiboy/node-static",
   "author": "maishu <ansiboy@163.com>",
@@ -10,19 +10,20 @@
   },
   "main": "./dist/index",
   "scripts": {
-    "build": "tsc -p src"
-  },
-  "bin": {
-    "static": "bin/cli.js"
+    "build": "tsc -p src",
+    "test": "mocha"
   },
   "license": "MIT",
   "dependencies": {
-    "maishu-chitu-service": "^1.17.0",
-    "mime": "^2.4.2",
-    "mocha": "^7.0.0"
+    "maishu-chitu-service": "^1.17.0"
   },
   "devDependencies": {
-    "@types/mime": "^2.0.1",
-    "@types/node": "^12.0.0"
-  }
+    "@types/node": "^12.0.0",
+    "mocha": "^7.0.0"
+  },
+  "files": [
+    "dist/*",
+    "src/*",
+    "test/*"
+  ]
 }
