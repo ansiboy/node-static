@@ -17,14 +17,6 @@ interface ServerOptions {
 type HttpHeaders = { [key: string]: string }
 var version = require("../package.json")["version"];
 
-// export enum StatusCode {
-//     NotFound = 404,
-//     OK = 200,
-//     Redirect = 301,
-//     BadRequest = 400,
-//     Forbidden = 403,
-// }
-
 let errorPages = {
     NotFound: "Not Found",
     Forbidden: "Forbidden",
