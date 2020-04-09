@@ -193,7 +193,7 @@ export class VirtualDirectory {
      * @param dirName 子文件夹的名称
      * @returns 子文件夹的虚拟文件夹
      */
-    private getChildDirectory(dirName: string) {
+    getChildDirectory(dirName: string) {
         if (this.childDirs[dirName])
             return this.childDirs[dirName];
 
@@ -207,9 +207,9 @@ export class VirtualDirectory {
     }
 
     /**
-     * 获取文件夹的物理路径
-     * @param virtualPath 文件夹的虚拟路径
-     * @returns 文件夹的物理路径
+     * 获取虚拟路径的虚拟文件夹
+     * @param virtualPath 指定的虚拟路径
+     * @returns 虚拟路径对应的虚拟文件夹, 如果不存在, 返回 null
      */
     getDirectory(virtualPath: string): VirtualDirectory | null {
         if (!virtualPath) throw errors.argumentNull("path");
