@@ -254,6 +254,37 @@ export class VirtualDirectory {
         return null;
     }
 
+    /**
+     * 获取文件的信息
+     * @param virtualPath virtualPath 文件的虚拟路径
+     */
+    getFileInfo(virtualPath: string): { phyiscalPath: string, virtualDirectory: VirtualDirectory } | null {
+        if (!virtualPath) throw errors.argumentNull("path");
+        VirtualDirectory.checkVirtualPath(virtualPath);
+
+        let names = virtualPath.split("/").filter(o => o);
+
+        let fileName: string = names[names.length - 1];
+        let dirPath = names.splice(0, names.length - 1).join("/");
+        let dir: VirtualDirectory | null = dirPath ? this.getDirectory(dirPath) : this;
+
+        if (dir == null)
+            return null;
+
+        if (dir.childFiles[fileName])
+            return { phyiscalPath: dir.childFiles[fileName], virtualDirectory: dir };
+
+        //===================================================
+        // 从物理文件夹中找出对应的文件，优先从后面的文件夹找
+        for (let i = dir.physicalPaths.length - 1; i >= 0; i--) {
+            let filePhysicalPath = path.join(dir.physicalPaths[i], fileName);
+            if (fs.existsSync(filePhysicalPath))
+                return { phyiscalPath: filePhysicalPath, virtualDirectory: dir };
+        }
+
+        return null;
+    }
+
     private static checkVirtualPath(virtualPath: string) {
         console.assert(virtualPath != null);
         if (virtualPath[0] == "/")
