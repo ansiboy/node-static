@@ -186,7 +186,7 @@ export class VirtualDirectory {
      * @param dirName 子文件夹的名称
      * @returns 子文件夹的虚拟文件夹
      */
-    getChildDirectory(dirName: string) {
+    private getChildDirectory(dirName: string) {
         if (this.childDirs[dirName])
             return this.childDirs[dirName];
 
@@ -200,9 +200,9 @@ export class VirtualDirectory {
     }
 
     /**
-     * 获取虚拟路径的虚拟文件夹
-     * @param virtualPath 指定的虚拟路径
-     * @returns 虚拟路径对应的虚拟文件夹, 如果不存在, 返回 null
+     * 获取文件夹的物理路径
+     * @param virtualPath 文件夹的虚拟路径
+     * @returns 文件夹的物理路径
      */
     getDirectory(virtualPath: string): VirtualDirectory | null {
         if (!virtualPath) throw errors.argumentNull("path");
@@ -249,37 +249,6 @@ export class VirtualDirectory {
             let filePhysicalPath = path.join(dir.physicalPaths[i], fileName);
             if (fs.existsSync(filePhysicalPath))
                 return filePhysicalPath;
-        }
-
-        return null;
-    }
-
-    /**
-     * 获取文件的信息
-     * @param virtualPath virtualPath 文件的虚拟路径
-     */
-    getFileInfo(virtualPath: string): { phyiscalPath: string, virtualDirectory: VirtualDirectory } | null {
-        if (!virtualPath) throw errors.argumentNull("path");
-        VirtualDirectory.checkVirtualPath(virtualPath);
-
-        let names = virtualPath.split("/").filter(o => o);
-
-        let fileName: string = names[names.length - 1];
-        let dirPath = names.splice(0, names.length - 1).join("/");
-        let dir: VirtualDirectory | null = dirPath ? this.getDirectory(dirPath) : this;
-
-        if (dir == null)
-            return null;
-
-        if (dir.childFiles[fileName])
-            return { phyiscalPath: dir.childFiles[fileName], virtualDirectory: dir };
-
-        //===================================================
-        // 从物理文件夹中找出对应的文件，优先从后面的文件夹找
-        for (let i = dir.physicalPaths.length - 1; i >= 0; i--) {
-            let filePhysicalPath = path.join(dir.physicalPaths[i], fileName);
-            if (fs.existsSync(filePhysicalPath))
-                return { phyiscalPath: filePhysicalPath, virtualDirectory: dir };
         }
 
         return null;
