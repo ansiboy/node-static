@@ -1,6 +1,7 @@
 const path = require("path");
 const assert = require("assert");
 const fs = require("fs");
+const t = require("maishu-toolkit");
 
 const { VirtualDirectory } = require("../dist/virtual-path");
 
@@ -24,7 +25,7 @@ describe("VirtualDirectory", function () {
         // console.log(files);
         assert.equal(names.length, 3);
         assert.equal(names[0], "1.txt");
-        assert.equal(files["1.txt"], path.join(__dirname, "data/dir2/1.txt"))
+        assert.equal(files["1.txt"], t.pathContact(__dirname, "data/dir2/1.txt"))
     })
 
     it("directory", function () {

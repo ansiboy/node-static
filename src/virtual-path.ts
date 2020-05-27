@@ -2,6 +2,7 @@ import { errors } from "./errors";
 import path = require("path");
 import fs = require("fs");
 import os = require("os");
+import { pathContact } from "maishu-toolkit";
 
 /**
  * 虚拟文件夹
@@ -65,7 +66,7 @@ export class VirtualDirectory {
         this.virtualPath = this.name;
         let p: VirtualDirectory | null = this.parent;
         while (p != null) {
-            this.virtualPath = path.join(p.name, this.virtualPath);
+            this.virtualPath =pathContact(p.name, this.virtualPath);
             p = p.parent;
         }
 
@@ -81,7 +82,7 @@ export class VirtualDirectory {
             let dirPhysicalPath = this.physicalPaths[i];
             let names = fs.readdirSync(dirPhysicalPath);
             names.map(name => {
-                let childPhysicalPath = path.join(dirPhysicalPath, name);
+                let childPhysicalPath = pathContact(dirPhysicalPath, name);
                 if (!fs.statSync(childPhysicalPath).isDirectory())
                     return;
 
@@ -151,7 +152,7 @@ export class VirtualDirectory {
 
             let names = fs.readdirSync(parentPhysicalPath);
             names.forEach(name => {
-                let childPhysicalPath = path.join(parentPhysicalPath, name);
+                let childPhysicalPath =pathContact(parentPhysicalPath, name);
                 if (fs.statSync(childPhysicalPath).isFile()) {
                     childFilePhysicalPaths[name] = childPhysicalPath;
                 }
@@ -171,7 +172,7 @@ export class VirtualDirectory {
 
             let names = fs.readdirSync(p);
             for (let j = 0; j < names.length; j++) {
-                let childPhysicalPath = path.join(p, names[j]);
+                let childPhysicalPath =pathContact(p, names[j]);
                 if (fileName == names[i] && fs.statSync(childPhysicalPath).isFile()) {
                     return childPhysicalPath;
                 }
@@ -190,7 +191,7 @@ export class VirtualDirectory {
         if (this.childDirs[dirName])
             return this.childDirs[dirName];
 
-        let childPhyPaths = this.physicalPaths.map(p => path.join(p, dirName))
+        let childPhyPaths = this.physicalPaths.map(p =>pathContact(p, dirName))
             .filter(o => fs.existsSync(o));
 
         if (childPhyPaths.length == 0)
@@ -246,7 +247,7 @@ export class VirtualDirectory {
         //===================================================
         // 从物理文件夹中找出对应的文件，优先从后面的文件夹找
         for (let i = dir.physicalPaths.length - 1; i >= 0; i--) {
-            let filePhysicalPath = path.join(dir.physicalPaths[i], fileName);
+            let filePhysicalPath = pathContact(dir.physicalPaths[i], fileName);
             if (fs.existsSync(filePhysicalPath))
                 return filePhysicalPath;
         }
