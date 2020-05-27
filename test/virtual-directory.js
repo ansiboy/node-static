@@ -50,6 +50,23 @@ describe("VirtualDirectory", function () {
         assert.equal(names2.length, 2);
     })
 
+    it("addPhysicalDirectory", function () {
+
+        let childDir1 = Object.assign({}, rootDir.getChildDirectories());
+        let names1 = Object.getOwnPropertyNames(childDir1);
+        let files1 = rootDir.getChildFiles();
+        rootDir.addPhysicalDirectory(path.join(__dirname, "data/dir3"));
+
+        let childDir2 = Object.assign({}, rootDir.getChildDirectories());
+        let names2 = Object.getOwnPropertyNames(childDir2);
+        let files2 = rootDir.getChildFiles();
+        assert.equal(names2.length, names1.length);
+        assert.equal(
+            Object.getOwnPropertyNames(files1).length + 1,
+            Object.getOwnPropertyNames(files2).length
+        );
+    })
+
     it("addVirtualFile", function () {
 
         let files1 = rootDir.getChildFiles();
@@ -72,17 +89,14 @@ describe("VirtualDirectory", function () {
 
         let filesDic = rootDir.getChildFiles();
         let files = Object.getOwnPropertyNames(filesDic).map(n => filesDic[n]);
-        // console.log(files);
         assert.notEqual(filesDic["1.txt"], null);
         let txt1 = fs.readFileSync(filesDic["1.txt"]).toString();
         assert.equal(txt1, "dir2-1.txt");
 
         let physicalPaths0 = [...rootDir.getPhysicalPaths()];
-        // console.log(physicalPaths0);
 
         rootDir.addPhysicalDirectory(path.join(__dirname, "data/dir3"));
         let physicalPaths1 = [...rootDir.getPhysicalPaths()];
-        // console.log(physicalPaths1);
 
         assert.equal(physicalPaths1.length, physicalPaths0.length + 1);
 
