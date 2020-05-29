@@ -187,15 +187,19 @@ export class VirtualDirectory {
      * @param dirName 子文件夹的名称
      * @returns 子文件夹的虚拟文件夹
      */
-    private getChildDirectory(dirName: string) {
+    private getChildDirectory(dirName: string, throwException: boolean = false) {
         if (this.childDirs[dirName])
             return this.childDirs[dirName];
 
         let childPhyPaths = this.physicalPaths.map(p => pathContact(p, dirName))
             .filter(o => fs.existsSync(o));
 
-        if (childPhyPaths.length == 0)
+        if (childPhyPaths.length == 0) {
+            if (throwException)
+                throw errors.directoryNotFound(dirName, this.physicalPaths);
+
             return null;
+        }
 
         return this.createChild(dirName, childPhyPaths);
     }
@@ -205,7 +209,7 @@ export class VirtualDirectory {
      * @param virtualPath 文件夹的虚拟路径
      * @returns 文件夹的物理路径
      */
-    getDirectory(virtualPath: string): VirtualDirectory | null {
+    getDirectory(virtualPath: string, throwException: boolean = false): VirtualDirectory | null {
         if (!virtualPath) throw errors.argumentNull("path");
         VirtualDirectory.checkVirtualPath(virtualPath);
 
@@ -213,14 +217,14 @@ export class VirtualDirectory {
         let dirName = names[names.length - 1];
         let parentPath = names.splice(0, names.length - 1).join("/");
         if (!parentPath) {
-            return this.getChildDirectory(dirName);
+            return this.getChildDirectory(dirName, throwException);
         }
 
-        let parentDir = this.getDirectory(parentPath);
+        let parentDir = this.getDirectory(parentPath, throwException);
         if (parentDir == null)
             return null;
 
-        return parentDir.getChildDirectory(dirName);
+        return parentDir.getChildDirectory(dirName, throwException);
     }
 
     /**
@@ -236,10 +240,11 @@ export class VirtualDirectory {
 
         let fileName: string = names[names.length - 1];
         let dirPath = names.splice(0, names.length - 1).join("/");
-        let dir: VirtualDirectory | null = dirPath ? this.getDirectory(dirPath) : this;
+        let dir: VirtualDirectory | null = dirPath ? this.getDirectory(dirPath, throwException) : this;
 
-        if (dir == null)
+        if (dir == null) {
             return null;
+        }
 
         if (dir.childFiles[fileName])
             return dir.childFiles[fileName];

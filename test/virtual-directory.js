@@ -109,7 +109,7 @@ describe("VirtualDirectory", function () {
 
     })
 
-    it("getFile", function () {
+    it("getFile  throw exception", function () {
         let rootDir = new VirtualDirectory(
             path.join(__dirname, "data/dir1"),
             path.join(__dirname, "data/dir2")
@@ -118,6 +118,23 @@ describe("VirtualDirectory", function () {
         let error = null;
         try {
             rootDir.getFile("xxxxxxxx", true);
+        }
+        catch (err) {
+            error = err;
+        }
+
+        assert.notEqual(error, null);
+    })
+
+    it("getDirectory throw exception", function () {
+        let rootDir = new VirtualDirectory(
+            path.join(__dirname, "data/dir1"),
+            path.join(__dirname, "data/dir2")
+        );
+
+        let error = null;
+        try {
+            rootDir.getDirectory("xxxxxxxx", true);
         }
         catch (err) {
             error = err;

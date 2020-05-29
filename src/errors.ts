@@ -97,5 +97,11 @@ export let errors = {
         let name: keyof typeof errors = "fileNotFound";
         error.name = name;
         return error;
-    }
+    },
+    directoryNotFound(virtualPath: string, searchIn: string[]) {
+        let error = new Error(`File '${virtualPath}' not found in the directories ${searchIn.join(",")}.`);
+        let name: keyof typeof errors = "directoryNotExists";
+        error.name = name;
+        return error;
+    },
 }
