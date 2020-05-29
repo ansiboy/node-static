@@ -66,7 +66,7 @@ export class VirtualDirectory {
         this.virtualPath = this.name;
         let p: VirtualDirectory | null = this.parent;
         while (p != null) {
-            this.virtualPath =pathContact(p.name, this.virtualPath);
+            this.virtualPath = pathContact(p.name, this.virtualPath);
             p = p.parent;
         }
 
@@ -152,7 +152,7 @@ export class VirtualDirectory {
 
             let names = fs.readdirSync(parentPhysicalPath);
             names.forEach(name => {
-                let childPhysicalPath =pathContact(parentPhysicalPath, name);
+                let childPhysicalPath = pathContact(parentPhysicalPath, name);
                 if (fs.statSync(childPhysicalPath).isFile()) {
                     childFilePhysicalPaths[name] = childPhysicalPath;
                 }
@@ -172,7 +172,7 @@ export class VirtualDirectory {
 
             let names = fs.readdirSync(p);
             for (let j = 0; j < names.length; j++) {
-                let childPhysicalPath =pathContact(p, names[j]);
+                let childPhysicalPath = pathContact(p, names[j]);
                 if (fileName == names[i] && fs.statSync(childPhysicalPath).isFile()) {
                     return childPhysicalPath;
                 }
@@ -191,7 +191,7 @@ export class VirtualDirectory {
         if (this.childDirs[dirName])
             return this.childDirs[dirName];
 
-        let childPhyPaths = this.physicalPaths.map(p =>pathContact(p, dirName))
+        let childPhyPaths = this.physicalPaths.map(p => pathContact(p, dirName))
             .filter(o => fs.existsSync(o));
 
         if (childPhyPaths.length == 0)
@@ -228,7 +228,7 @@ export class VirtualDirectory {
      * @param virtualPath 文件的虚拟路径
      * @returns 文件的物理路径
      */
-    getFile(virtualPath: string): string | null {
+    getFile(virtualPath: string, throwException: boolean = false): string | null {
         if (!virtualPath) throw errors.argumentNull("path");
         VirtualDirectory.checkVirtualPath(virtualPath);
 
@@ -251,6 +251,9 @@ export class VirtualDirectory {
             if (fs.existsSync(filePhysicalPath))
                 return filePhysicalPath;
         }
+
+        if (throwException)
+            throw errors.fileNotFound(virtualPath, dir.physicalPaths);
 
         return null;
     }
@@ -277,7 +280,7 @@ export class VirtualDirectory {
         let parentPath = names.splice(0, names.length - 1).join("/");
         let parentDir = parentPath == "" ? this : this.getDirectory(parentPath);
         if (parentDir == null)
-            throw errors.filePahtExists(parentPath);
+            throw errors.pathExists(parentPath);
 
         if (parentDir.childDirs[dirName] != null && operationExists == "merge") {
             parentDir.childDirs[dirName].addPhysicalDirectory(physicalPath);

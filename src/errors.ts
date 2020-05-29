@@ -62,9 +62,9 @@ export let errors = {
         error.name = name;
         return error;
     },
-    filePahtExists(path: string) {
-        let error = new Error(`File path '${path}' is exists.`);
-        let name: keyof typeof errors = "filePahtExists";
+    pathExists(path: string) {
+        let error = new Error(`Path '${path}' is exists.`);
+        let name: keyof typeof errors = "pathExists";
         error.name = name;
         return error;
     },
@@ -89,6 +89,12 @@ export let errors = {
     invalidVirtualPath(virtualPath: string) {
         let error = new Error(`Path '${virtualPath}' is a invalid path.`);
         let name: keyof typeof errors = "invalidVirtualPath";
+        error.name = name;
+        return error;
+    },
+    fileNotFound(virtualPath: string, searchIn: string[]) {
+        let error = new Error(`File '${virtualPath}' not found in the directories ${searchIn.join(",")}.`);
+        let name: keyof typeof errors = "fileNotFound";
         error.name = name;
         return error;
     }

@@ -108,4 +108,21 @@ describe("VirtualDirectory", function () {
         assert.equal(txt1, "dir3-1.txt");
 
     })
+
+    it("getFile", function () {
+        let rootDir = new VirtualDirectory(
+            path.join(__dirname, "data/dir1"),
+            path.join(__dirname, "data/dir2")
+        );
+
+        let error = null;
+        try {
+            rootDir.getFile("xxxxxxxx", true);
+        }
+        catch (err) {
+            error = err;
+        }
+
+        assert.notEqual(error, null);
+    })
 })
